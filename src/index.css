@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-navy-950 text-slate-100 antialiased;
+  }
+  input,
+  select,
+  textarea {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono uppercase tracking-widest text-xs text-amber-400;
+  }
+  .field-label {
+    @apply block text-sm text-slate-300 mb-1.5;
+  }
+  .field-input {
+    @apply w-full rounded-xl border border-navy-600 bg-navy-900/60 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus:border-coral-500 focus:ring-1 focus:ring-coral-500;
+  }
+  .field-error {
+    @apply mt-1 text-xs text-red-400;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-coral-500 px-5 py-2.5 text-sm font-semibold text-navy-950 transition hover:bg-coral-400 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-navy-600 bg-transparent px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-navy-800;
+  }
+  .card {
+    @apply rounded-xl2 border border-navy-700/70 bg-navy-900 shadow-lg shadow-black/20;
+  }
+}
