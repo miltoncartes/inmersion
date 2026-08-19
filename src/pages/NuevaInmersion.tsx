@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
 import { TextField, SelectField, TextareaField } from "../components/FormField";
+import { mensajeDeError } from "../lib/errores";
 import { minutesBetween, todayISO, parseDecimal } from "../lib/format";
 import type { Tables } from "../lib/types";
 
@@ -54,7 +55,7 @@ export function NuevaInmersion() {
         supabase.from("supervisor").select("*").order("nombre_super"),
         supabase.from("cliente").select("*").order("nombre_cliente"),
         supabase.from("equipos").select("*").order("nombre_ordenador"),
-        supabase.from("tabla_us_navy").select("*").order("orden"),
+        supabase.from("tabla_us_navy").select("*").order("composicion"),
       ]);
       setBuzos(b.data ?? []);
       setSupervisores(s.data ?? []);
@@ -94,7 +95,7 @@ export function NuevaInmersion() {
             profundidad_maxima: tiempos?.profundidad_maxima?.toString() ?? "",
             tiempo_total_fondo: tiempos?.tiempo_total_fondo?.toString() ?? "",
             tiempo_total_descompresion: tiempos?.tiempo_total_descompresion?.toString() ?? "",
-            id_navy: tiempos?.id_navy ?? "",
+            id_navy: perfil.id_navy ?? "",
           });
         }
       }
@@ -132,8 +133,24 @@ export function NuevaInmersion() {
     e.preventDefault();
     setError(null);
 
+    if (!form.id_buzo) {
+      setError(
+        esBuzo
+          ? "Tu cuenta todavía no está ligada a una ficha de buzo. Pide a un administrador que la asocie en Administración → Usuarios."
+          : "Debes seleccionar el buzo que realizó la inmersión."
+      );
+      return;
+    }
+    if (!form.id_cliente) {
+      setError("Debes seleccionar un cliente para poder elegir su centro de costo.");
+      return;
+    }
     if (!form.id_centro_cultivo) {
-      setError("Debes seleccionar un centro de costo.");
+      setError(
+        centros.length === 0
+          ? "El cliente seleccionado no tiene centros de cultivo cargados. Agrégalos en el mantenedor de Clientes."
+          : "Debes seleccionar un centro de costo."
+      );
       return;
     }
     if (!form.embarcacion.trim()) {
@@ -155,6 +172,7 @@ export function NuevaInmersion() {
         id_cliente: form.id_cliente || null,
         id_centro_cultivo: form.id_centro_cultivo,
         id_equipo: form.id_equipo || null,
+        id_navy: form.id_navy || null,
         embarcacion: form.embarcacion,
         hora_dejo_superficie: form.hora_dejo_superficie || null,
         hora_llego_fondo: form.hora_llego_fondo || null,
@@ -168,7 +186,7 @@ export function NuevaInmersion() {
       };
 
       let inmersionId = id;
-      if (editing) {
+      if (editing && id) {
         const { error } = await supabase.from("perfil_inmersion").update(payload).eq("id_inmersion", id);
         if (error) throw error;
       } else {
@@ -186,7 +204,6 @@ export function NuevaInmersion() {
           : null,
         tiempo_total_buceo: tiempoTotalBuceo,
         profundidad_maxima: form.profundidad_maxima ? parseDecimal(form.profundidad_maxima) : null,
-        id_navy: form.id_navy || null,
       };
       const { error: tError } = await supabase.from("tiempos_totales").upsert(tiemposPayload);
       if (tError) throw tError;
@@ -194,7 +211,7 @@ export function NuevaInmersion() {
       setOk(true);
       setTimeout(() => navigate(`/inmersiones/${inmersionId}`), 700);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar la inmersión.");
+      setError(mensajeDeError(err, "guardar la inmersión"));
     } finally {
       setLoading(false);
     }
@@ -358,15 +375,25 @@ export function NuevaInmersion() {
         </Section>
 
         <Section title="Tabulación y faena realizada">
-          <SelectField
-            label="Tabulación Tabla US Navy"
-            value={form.id_navy}
-            onChange={(e) => update("id_navy", e.target.value)}
-            options={tablaNavy.map((n) => ({
-              value: n.id_navy,
-              label: `${n.composicion}${n.observacion ? ` · ${n.observacion}` : ""}`,
-            }))}
-          />
+          <div>
+            <SelectField
+              label="Tabulación Tabla US Navy"
+              value={form.id_navy}
+              onChange={(e) => update("id_navy", e.target.value)}
+              placeholder={
+                tablaNavy.length === 0 ? "Sin composiciones cargadas" : "Selecciona..."
+              }
+              options={tablaNavy.map((n) => ({
+                value: n.id_navy,
+                label: `${n.composicion}${n.observacion ? ` · ${n.observacion}` : ""}`,
+              }))}
+            />
+            {tablaNavy.length === 0 && (
+              <p className="mt-1 text-xs text-amber-400">
+                No hay composiciones cargadas en el mantenedor de Tabla US Navy.
+              </p>
+            )}
+          </div>
           <TextareaField
             label="Faena realizada"
             rows={3}

@@ -9,12 +9,26 @@ const rutSchema = z
 export const buzoSchema = z.object({
   rut_buzo: rutSchema,
   nombre_buzo: z.string().min(2, "Nombre requerido"),
+  email: z
+    .string()
+    .trim()
+    .email("Correo electrónico inválido")
+    .or(z.literal(""))
+    .optional()
+    .nullable(),
   clase_matricula: z.string().optional().nullable(),
   vencimiento_hipervarico: z.string().optional().nullable(),
   estado: z.enum(["activo", "inactivo", "suspendido"]),
+  habilitado: z.boolean(),
   id_equipo_asignado: z.string().optional().nullable(),
 });
 export type BuzoForm = z.infer<typeof buzoSchema>;
+
+export const tablaUsNavySchema = z.object({
+  composicion: z.string().min(1, "Composición requerida"),
+  observacion: z.string().optional().nullable(),
+});
+export type TablaUsNavyForm = z.infer<typeof tablaUsNavySchema>;
 
 export const equipoSchema = z.object({
   nombre_ordenador: z.string().min(1, "Nombre del ordenador requerido"),

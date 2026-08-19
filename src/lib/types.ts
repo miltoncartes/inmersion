@@ -70,7 +70,9 @@ export type Database = {
         Row: {
           clase_matricula: string | null
           created_at: string
+          email: string | null
           estado: string
+          habilitado: boolean
           id_buzo: string
           id_equipo_asignado: string | null
           nombre_buzo: string
@@ -81,7 +83,9 @@ export type Database = {
         Insert: {
           clase_matricula?: string | null
           created_at?: string
+          email?: string | null
           estado?: string
+          habilitado?: boolean
           id_buzo?: string
           id_equipo_asignado?: string | null
           nombre_buzo: string
@@ -92,7 +96,9 @@ export type Database = {
         Update: {
           clase_matricula?: string | null
           created_at?: string
+          email?: string | null
           estado?: string
+          habilitado?: boolean
           id_buzo?: string
           id_equipo_asignado?: string | null
           nombre_buzo?: string
@@ -288,6 +294,7 @@ export type Database = {
           id_cliente: string | null
           id_equipo: string | null
           id_inmersion: string
+          id_navy: string | null
           id_supervisor: string | null
           observacion_admin: string | null
           temperatura_agua: number | null
@@ -314,6 +321,7 @@ export type Database = {
           id_cliente?: string | null
           id_equipo?: string | null
           id_inmersion?: string
+          id_navy?: string | null
           id_supervisor?: string | null
           observacion_admin?: string | null
           temperatura_agua?: number | null
@@ -340,6 +348,7 @@ export type Database = {
           id_cliente?: string | null
           id_equipo?: string | null
           id_inmersion?: string
+          id_navy?: string | null
           id_supervisor?: string | null
           observacion_admin?: string | null
           temperatura_agua?: number | null
@@ -392,6 +401,13 @@ export type Database = {
             referencedColumns: ["id_equipo"]
           },
           {
+            foreignKeyName: "perfil_inmersion_id_navy_fkey"
+            columns: ["id_navy"]
+            isOneToOne: false
+            referencedRelation: "tabla_us_navy"
+            referencedColumns: ["id_navy"]
+          },
+          {
             foreignKeyName: "perfil_inmersion_id_supervisor_fkey"
             columns: ["id_supervisor"]
             isOneToOne: false
@@ -434,21 +450,24 @@ export type Database = {
       tabla_us_navy: {
         Row: {
           composicion: string
+          created_at: string
           id_navy: string
           observacion: string | null
-          orden: number
+          updated_at: string
         }
         Insert: {
           composicion: string
+          created_at?: string
           id_navy?: string
           observacion?: string | null
-          orden: number
+          updated_at?: string
         }
         Update: {
           composicion?: string
+          created_at?: string
           id_navy?: string
           observacion?: string | null
-          orden?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -457,7 +476,6 @@ export type Database = {
           created_at: string
           id_buzo: string
           id_inmersion: string
-          id_navy: string | null
           profundidad_maxima: number | null
           tiempo_total_buceo: number | null
           tiempo_total_descompresion: number | null
@@ -468,7 +486,6 @@ export type Database = {
           created_at?: string
           id_buzo: string
           id_inmersion: string
-          id_navy?: string | null
           profundidad_maxima?: number | null
           tiempo_total_buceo?: number | null
           tiempo_total_descompresion?: number | null
@@ -479,7 +496,6 @@ export type Database = {
           created_at?: string
           id_buzo?: string
           id_inmersion?: string
-          id_navy?: string | null
           profundidad_maxima?: number | null
           tiempo_total_buceo?: number | null
           tiempo_total_descompresion?: number | null
@@ -500,13 +516,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "perfil_inmersion"
             referencedColumns: ["id_inmersion"]
-          },
-          {
-            foreignKeyName: "tiempos_totales_id_navy_fkey"
-            columns: ["id_navy"]
-            isOneToOne: false
-            referencedRelation: "tabla_us_navy"
-            referencedColumns: ["id_navy"]
           },
         ]
       }
@@ -557,6 +566,8 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_editor: { Args: never; Returns: boolean }
       mi_id_buzo: { Args: never; Returns: string }
+      puede_recuperar_password: { Args: { p_email: string }; Returns: boolean }
+      estado_registro_email: { Args: { p_email: string }; Returns: string }
     }
     Enums: {
       estado_validacion_inmersion: "pendiente" | "validada"

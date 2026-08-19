@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
 import { formatDate } from "../lib/format";
+import { mensajeDeError } from "../lib/errores";
 import { Badge } from "../components/Badge";
 import { Logo } from "../components/Logo";
 import type { Tables } from "../lib/types";
@@ -14,7 +15,8 @@ type Detalle = Tables<"perfil_inmersion"> & {
   cliente: Tables<"cliente"> | null;
   centro_cultivo: Tables<"centro_cultivo"> | null;
   equipo: Tables<"equipos"> | null;
-  tiempos: (Tables<"tiempos_totales"> & { tabla_us_navy: Tables<"tabla_us_navy"> | null }) | null;
+  tabulacion: Tables<"tabla_us_navy"> | null;
+  tiempos: Tables<"tiempos_totales"> | null;
 };
 
 export function DetalleInmersion() {
@@ -28,11 +30,16 @@ export function DetalleInmersion() {
   const [validando, setValidando] = useState(false);
 
   async function cargar() {
+    if (!id) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const { data: row } = await supabase
       .from("perfil_inmersion")
       .select(
-        "*, buzo:buzo!id_buzo(*), buzo_emergencia:buzo!id_buzo_emergencia(*), supervisor:supervisor!id_supervisor(*), cliente:cliente!id_cliente(*), centro_cultivo:centro_cultivo!id_centro_cultivo(*), equipo:equipos!id_equipo(*), tiempos:tiempos_totales!id_inmersion(*, tabla_us_navy!id_navy(*))"
+        "*, buzo:buzo!id_buzo(*), buzo_emergencia:buzo!id_buzo_emergencia(*), supervisor:supervisor!id_supervisor(*), cliente:cliente!id_cliente(*), centro_cultivo:centro_cultivo!id_centro_cultivo(*), equipo:equipos!id_equipo(*), tabulacion:tabla_us_navy!id_navy(*), tiempos:tiempos_totales!id_inmersion(*)"
       )
       .eq("id_inmersion", id)
       .maybeSingle();
@@ -69,7 +76,7 @@ export function DetalleInmersion() {
       .eq("id_inmersion", id);
     setValidando(false);
     if (error) {
-      alert("No se pudo validar: " + error.message);
+      alert(mensajeDeError(error, "validar la inmersión"));
       return;
     }
     await cargar();
@@ -83,7 +90,7 @@ export function DetalleInmersion() {
       .update({ observacion_admin: observacion || null })
       .eq("id_inmersion", id);
     setValidando(false);
-    if (error) alert("No se pudo guardar la observación: " + error.message);
+    if (error) alert(mensajeDeError(error, "guardar la observación"));
     else await cargar();
   }
 
@@ -148,7 +155,7 @@ export function DetalleInmersion() {
           <Row label="Tiempo total fondo" value={data.tiempos?.tiempo_total_fondo != null ? `${data.tiempos.tiempo_total_fondo} min` : "—"} />
           <Row label="Tiempo total descompresión" value={data.tiempos?.tiempo_total_descompresion != null ? `${data.tiempos.tiempo_total_descompresion} min` : "—"} />
           <Row label="Tiempo total buceo" value={data.tiempos?.tiempo_total_buceo != null ? `${data.tiempos.tiempo_total_buceo} min` : "—"} />
-          <Row label="Tabulación Tabla US Navy" value={data.tiempos?.tabla_us_navy?.composicion ?? "—"} />
+          <Row label="Tabulación Tabla US Navy" value={data.tabulacion?.composicion ?? "—"} />
         </InfoCard>
 
         <InfoCard title="Condiciones y equipo">

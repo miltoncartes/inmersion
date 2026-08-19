@@ -13,9 +13,10 @@ export function useCrud<T extends TableName>(table: T, orderBy: string) {
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase.from(table).select("*").order(orderBy);
+    const query = supabase.from(table).select("*") as any;
+    const { data, error } = await query.order(orderBy);
     if (error) setError(error.message);
-    setRows((data as Row[]) ?? []);
+    setRows((data as Row[] | null) ?? []);
     setLoading(false);
   }, [table, orderBy]);
 
@@ -31,8 +32,8 @@ export function useCrud<T extends TableName>(table: T, orderBy: string) {
   }
 
   async function update(match: Record<string, string>, payload: Database["public"]["Tables"][T]["Update"]) {
-    let query = supabase.from(table).update(payload as any);
-    for (const [k, v] of Object.entries(match)) query = query.eq(k, v) as any;
+    let query: any = supabase.from(table).update(payload as any);
+    for (const [k, v] of Object.entries(match)) query = query.eq(k, v);
     const { error } = await query;
     if (error) return error.message;
     await reload();
@@ -40,8 +41,8 @@ export function useCrud<T extends TableName>(table: T, orderBy: string) {
   }
 
   async function remove(match: Record<string, string>) {
-    let query = supabase.from(table).delete();
-    for (const [k, v] of Object.entries(match)) query = query.eq(k, v) as any;
+    let query: any = supabase.from(table).delete();
+    for (const [k, v] of Object.entries(match)) query = query.eq(k, v);
     const { error } = await query;
     if (error) return error.message;
     await reload();

@@ -15,10 +15,20 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!session) return <Navigate to="/login" replace />;
 
-  if (perfil && !perfil.activo) {
+  // Sin perfil no hay rol ni permisos: la cuenta existe pero aún no fue
+  // habilitada por un administrador, así que no debe entrar a la aplicación.
+  if (!perfil) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-navy-950 px-4 text-center text-slate-300">
-        Tu cuenta está desactivada. Contacta a un administrador de MDIBUCEO.
+        Tu cuenta aún no tiene un perfil asignado en MDIBUCEO. Contacta a un administrador para que te asigne un rol.
+      </div>
+    );
+  }
+
+  if (!perfil.activo) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-navy-950 px-4 text-center text-slate-300">
+        Tu cuenta está desactivada o pendiente de aprobación. Contacta a un administrador de MDIBUCEO.
       </div>
     );
   }

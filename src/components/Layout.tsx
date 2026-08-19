@@ -17,6 +17,7 @@ const mantenedores = [
   { to: "/mantenedores/botellas-emer", label: "Botellas emer." },
   { to: "/mantenedores/supervisores", label: "Supervisores" },
   { to: "/mantenedores/clientes", label: "Clientes" },
+  { to: "/mantenedores/tabla-us-navy", label: "Tabla US Navy" },
 ];
 
 export function Layout() {
@@ -64,6 +65,10 @@ export function Layout() {
           </button>
           <Logo size={32} />
           <span className="font-mono text-xs uppercase tracking-widest text-amber-400">MDIBUCEO</span>
+          <div className="ml-auto min-w-0 text-right">
+            <p className="truncate text-sm font-medium text-slate-200">{perfil?.nombre ?? "Usuario"}</p>
+            <p className="eyebrow leading-tight">{perfil?.rol ?? "—"}</p>
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:px-8 md:py-8">
