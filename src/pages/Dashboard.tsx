@@ -14,7 +14,7 @@ type Recent = {
 };
 
 export function Dashboard() {
-  const { perfil, esEditor } = useAuth();
+  const { perfil, puedeRegistrarInmersion } = useAuth();
   const [totalMes, setTotalMes] = useState(0);
   const [totalHistorico, setTotalHistorico] = useState(0);
   const [buzosActivos, setBuzosActivos] = useState(0);
@@ -42,7 +42,7 @@ export function Dashboard() {
           .gte("vencimiento_hipervarico", hoyISO),
         supabase
           .from("equipos")
-          .select("numero_serie_ordenador", { count: "exact", head: true })
+          .select("id_equipo", { count: "exact", head: true })
           .not("vencimiento_equipo", "is", null)
           .lte("vencimiento_equipo", en30dias)
           .gte("vencimiento_equipo", hoyISO),
@@ -77,7 +77,7 @@ export function Dashboard() {
           title="Tu bitácora está vacía"
           description="Registra tu primera inmersión para empezar a ver tus estadísticas y tu historial de buceo."
           action={
-            esEditor ? (
+            puedeRegistrarInmersion ? (
               <Link to="/inmersiones/nueva" className="btn-primary mt-2">
                 Registrar inmersión
               </Link>

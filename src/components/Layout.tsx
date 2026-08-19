@@ -12,12 +12,15 @@ const navItems = [
 const mantenedores = [
   { to: "/mantenedores/buzos", label: "Buzos" },
   { to: "/mantenedores/equipos", label: "Equipos" },
+  { to: "/mantenedores/mascaras", label: "Máscaras" },
+  { to: "/mantenedores/botellas-aux", label: "Botellas aux." },
+  { to: "/mantenedores/botellas-emer", label: "Botellas emer." },
   { to: "/mantenedores/supervisores", label: "Supervisores" },
   { to: "/mantenedores/clientes", label: "Clientes" },
 ];
 
 export function Layout() {
-  const { perfil, esAdmin, signOut } = useAuth();
+  const { perfil, esAdmin, esBuzo, signOut } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -25,6 +28,7 @@ export function Layout() {
       <aside className="hidden w-64 shrink-0 border-r border-navy-800 bg-navy-900/40 md:flex md:flex-col">
         <SidebarContent
           esAdmin={esAdmin}
+          esBuzo={esBuzo}
           nombre={perfil?.nombre}
           rol={perfil?.rol}
           onSignOut={signOut}
@@ -37,6 +41,7 @@ export function Layout() {
           <aside className="absolute inset-y-0 left-0 w-72 border-r border-navy-800 bg-navy-900 shadow-xl">
             <SidebarContent
               esAdmin={esAdmin}
+              esBuzo={esBuzo}
               nombre={perfil?.nombre}
               rol={perfil?.rol}
               onSignOut={signOut}
@@ -71,12 +76,14 @@ export function Layout() {
 
 function SidebarContent({
   esAdmin,
+  esBuzo,
   nombre,
   rol,
   onSignOut,
   onNavigate,
 }: {
   esAdmin: boolean;
+  esBuzo: boolean;
   nombre?: string;
   rol?: string;
   onSignOut: () => void;
@@ -98,10 +105,14 @@ function SidebarContent({
           <NavItem key={item.to} {...item} onNavigate={onNavigate} />
         ))}
 
-        <p className="eyebrow mb-1 mt-5 px-2">Mantenedores</p>
-        {mantenedores.map((item) => (
-          <NavItem key={item.to} to={item.to} label={item.label} icon={IconFolder} end onNavigate={onNavigate} />
-        ))}
+        {!esBuzo && (
+          <>
+            <p className="eyebrow mb-1 mt-5 px-2">Mantenedores</p>
+            {mantenedores.map((item) => (
+              <NavItem key={item.to} to={item.to} label={item.label} icon={IconFolder} end onNavigate={onNavigate} />
+            ))}
+          </>
+        )}
 
         {esAdmin && (
           <>

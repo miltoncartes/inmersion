@@ -12,6 +12,9 @@ import { Buzos } from "./pages/mantenedores/Buzos";
 import { Equipos } from "./pages/mantenedores/Equipos";
 import { Supervisores } from "./pages/mantenedores/Supervisores";
 import { Clientes } from "./pages/mantenedores/Clientes";
+import { Mascaras } from "./pages/mantenedores/Mascaras";
+import { BotellasAux } from "./pages/mantenedores/BotellasAux";
+import { BotellasEmer } from "./pages/mantenedores/BotellasEmer";
 
 export default function App() {
   return (
@@ -26,16 +29,31 @@ export default function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/inmersiones" element={<Inmersiones />} />
-        <Route path="/inmersiones/nueva" element={<EditorOnly><NuevaInmersion /></EditorOnly>} />
+        <Route path="/inmersiones/nueva" element={<PuedeRegistrar><NuevaInmersion /></PuedeRegistrar>} />
         <Route path="/inmersiones/:id" element={<DetalleInmersion />} />
-        <Route path="/inmersiones/:id/editar" element={<EditorOnly><NuevaInmersion /></EditorOnly>} />
-        <Route path="/mantenedores/buzos" element={<Buzos />} />
-        <Route path="/mantenedores/equipos" element={<Equipos />} />
-        <Route path="/mantenedores/supervisores" element={<Supervisores />} />
-        <Route path="/mantenedores/clientes" element={<Clientes />} />
+        <Route path="/inmersiones/:id/editar" element={<PuedeRegistrar><NuevaInmersion /></PuedeRegistrar>} />
+        <Route path="/mantenedores/buzos" element={<EditorOnly><Buzos /></EditorOnly>} />
+        <Route path="/mantenedores/equipos" element={<EditorOnly><Equipos /></EditorOnly>} />
+        <Route path="/mantenedores/supervisores" element={<EditorOnly><Supervisores /></EditorOnly>} />
+        <Route path="/mantenedores/clientes" element={<EditorOnly><Clientes /></EditorOnly>} />
+        <Route path="/mantenedores/mascaras" element={<EditorOnly><Mascaras /></EditorOnly>} />
+        <Route path="/mantenedores/botellas-aux" element={<EditorOnly><BotellasAux /></EditorOnly>} />
+        <Route path="/mantenedores/botellas-emer" element={<EditorOnly><BotellasEmer /></EditorOnly>} />
         <Route path="/usuarios" element={<AdminOnly><Usuarios /></AdminOnly>} />
       </Route>
     </Routes>
+  );
+}
+
+function PuedeRegistrar({ children }: { children: React.ReactNode }) {
+  const { puedeRegistrarInmersion } = useAuth();
+  return (
+    <RoleGate
+      allow={puedeRegistrarInmersion}
+      fallback={<p className="text-sm text-slate-400">No tienes permiso para acceder a esta sección.</p>}
+    >
+      {children}
+    </RoleGate>
   );
 }
 

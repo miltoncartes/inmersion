@@ -115,7 +115,7 @@ export function Login() {
 
         {mode === "signup" && (
           <p className="mt-4 text-center text-xs text-slate-500">
-            Las cuentas nuevas quedan con permiso de solo-lectura hasta que un administrador asigne un rol.
+            Las cuentas nuevas quedan con rol de buzo (registro y consulta de tus propias inmersiones) hasta que un administrador asigne otro rol.
           </p>
         )}
       </div>

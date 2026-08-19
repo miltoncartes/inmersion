@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
 import { TextField, SelectField, TextareaField } from "../components/FormField";
-import { minutesBetween, todayISO } from "../lib/format";
+import { minutesBetween, todayISO, parseDecimal } from "../lib/format";
 import type { Tables } from "../lib/types";
 
 const ESTADOS_MAR = ["Calmo", "Marejadilla", "Marejada", "Fuerte marejada"];
@@ -12,22 +12,27 @@ export function NuevaInmersion() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, esBuzo, idBuzo } = useAuth();
 
   const [buzos, setBuzos] = useState<Tables<"buzo">[]>([]);
   const [supervisores, setSupervisores] = useState<Tables<"supervisor">[]>([]);
   const [clientes, setClientes] = useState<Tables<"cliente">[]>([]);
   const [equipos, setEquipos] = useState<Tables<"equipos">[]>([]);
+  const [tablaNavy, setTablaNavy] = useState<Tables<"tabla_us_navy">[]>([]);
+  const [centros, setCentros] = useState<Tables<"centro_cultivo">[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
 
   const [form, setForm] = useState({
     fecha_inmersion: todayISO(),
-    id_buzo: "",
+    id_buzo: esBuzo ? idBuzo ?? "" : "",
+    id_buzo_emergencia: "",
     id_supervisor: "",
     id_cliente: "",
-    numero_serie_ordenador: "",
+    id_centro_cultivo: "",
+    id_equipo: "",
+    embarcacion: "",
     hora_dejo_superficie: "",
     hora_llego_fondo: "",
     hora_dejo_fondo: "",
@@ -39,21 +44,23 @@ export function NuevaInmersion() {
     profundidad_maxima: "",
     tiempo_total_fondo: "",
     tiempo_total_descompresion: "",
-    tabulacion: "",
+    id_navy: "",
   });
 
   useEffect(() => {
     (async () => {
-      const [b, s, c, e] = await Promise.all([
+      const [b, s, c, e, n] = await Promise.all([
         supabase.from("buzo").select("*").eq("estado", "activo").order("nombre_buzo"),
         supabase.from("supervisor").select("*").order("nombre_super"),
         supabase.from("cliente").select("*").order("nombre_cliente"),
-        supabase.from("equipos").select("*").order("numero_serie_ordenador"),
+        supabase.from("equipos").select("*").order("nombre_ordenador"),
+        supabase.from("tabla_us_navy").select("*").order("orden"),
       ]);
       setBuzos(b.data ?? []);
       setSupervisores(s.data ?? []);
       setClientes(c.data ?? []);
       setEquipos(e.data ?? []);
+      setTablaNavy(n.data ?? []);
 
       if (id) {
         const { data: perfil } = await supabase
@@ -70,9 +77,12 @@ export function NuevaInmersion() {
           setForm({
             fecha_inmersion: perfil.fecha_inmersion,
             id_buzo: perfil.id_buzo,
+            id_buzo_emergencia: perfil.id_buzo_emergencia ?? "",
             id_supervisor: perfil.id_supervisor ?? "",
             id_cliente: perfil.id_cliente ?? "",
-            numero_serie_ordenador: perfil.numero_serie_ordenador ?? "",
+            id_centro_cultivo: perfil.id_centro_cultivo ?? "",
+            id_equipo: perfil.id_equipo ?? "",
+            embarcacion: perfil.embarcacion ?? "",
             hora_dejo_superficie: perfil.hora_dejo_superficie ?? "",
             hora_llego_fondo: perfil.hora_llego_fondo ?? "",
             hora_dejo_fondo: perfil.hora_dejo_fondo ?? "",
@@ -84,7 +94,7 @@ export function NuevaInmersion() {
             profundidad_maxima: tiempos?.profundidad_maxima?.toString() ?? "",
             tiempo_total_fondo: tiempos?.tiempo_total_fondo?.toString() ?? "",
             tiempo_total_descompresion: tiempos?.tiempo_total_descompresion?.toString() ?? "",
-            tabulacion: tiempos?.tabulacion ?? "",
+            id_navy: tiempos?.id_navy ?? "",
           });
         }
       }
@@ -94,6 +104,20 @@ export function NuevaInmersion() {
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
+
+  // Carga los centros de cultivo del cliente elegido.
+  useEffect(() => {
+    if (!form.id_cliente) {
+      setCentros([]);
+      return;
+    }
+    supabase
+      .from("centro_cultivo")
+      .select("*")
+      .eq("id_cliente", form.id_cliente)
+      .order("nombre_centro")
+      .then(({ data }) => setCentros(data ?? []));
+  }, [form.id_cliente]);
 
   // Auto-sugiere el tiempo de fondo cuando cambian las horas de fondo.
   useEffect(() => {
@@ -107,20 +131,37 @@ export function NuevaInmersion() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!form.id_centro_cultivo) {
+      setError("Debes seleccionar un centro de costo.");
+      return;
+    }
+    if (!form.embarcacion.trim()) {
+      setError("Debes indicar la embarcación.");
+      return;
+    }
+    if (form.id_buzo_emergencia && form.id_buzo_emergencia === form.id_buzo) {
+      setError("El buzo de emergencia no puede ser el mismo buzo.");
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
         fecha_inmersion: form.fecha_inmersion,
         id_buzo: form.id_buzo,
+        id_buzo_emergencia: form.id_buzo_emergencia || null,
         id_supervisor: form.id_supervisor || null,
         id_cliente: form.id_cliente || null,
-        numero_serie_ordenador: form.numero_serie_ordenador || null,
+        id_centro_cultivo: form.id_centro_cultivo,
+        id_equipo: form.id_equipo || null,
+        embarcacion: form.embarcacion,
         hora_dejo_superficie: form.hora_dejo_superficie || null,
         hora_llego_fondo: form.hora_llego_fondo || null,
         hora_dejo_fondo: form.hora_dejo_fondo || null,
         hora_llego_superficie: form.hora_llego_superficie || null,
         ubicacion: form.ubicacion || null,
-        temperatura_agua: form.temperatura_agua ? Number(form.temperatura_agua) : null,
+        temperatura_agua: form.temperatura_agua ? parseDecimal(form.temperatura_agua) : null,
         estado_mar: form.estado_mar || null,
         faena_realizada: form.faena_realizada || null,
         created_by: session?.user.id ?? null,
@@ -144,8 +185,8 @@ export function NuevaInmersion() {
           ? Number(form.tiempo_total_descompresion)
           : null,
         tiempo_total_buceo: tiempoTotalBuceo,
-        profundidad_maxima: form.profundidad_maxima ? Number(form.profundidad_maxima) : null,
-        tabulacion: form.tabulacion || null,
+        profundidad_maxima: form.profundidad_maxima ? parseDecimal(form.profundidad_maxima) : null,
+        id_navy: form.id_navy || null,
       };
       const { error: tError } = await supabase.from("tiempos_totales").upsert(tiemposPayload);
       if (tError) throw tError;
@@ -180,9 +221,18 @@ export function NuevaInmersion() {
           <SelectField
             label="Buzo"
             required
+            disabled={esBuzo}
             value={form.id_buzo}
             onChange={(e) => update("id_buzo", e.target.value)}
             options={buzos.map((b) => ({ value: b.id_buzo, label: `${b.nombre_buzo} · ${b.rut_buzo}` }))}
+          />
+          <SelectField
+            label="Buzo de emergencia"
+            value={form.id_buzo_emergencia}
+            onChange={(e) => update("id_buzo_emergencia", e.target.value)}
+            options={buzos
+              .filter((b) => b.id_buzo !== form.id_buzo)
+              .map((b) => ({ value: b.id_buzo, label: `${b.nombre_buzo} · ${b.rut_buzo}` }))}
           />
           <SelectField
             label="Supervisor"
@@ -193,8 +243,27 @@ export function NuevaInmersion() {
           <SelectField
             label="Cliente"
             value={form.id_cliente}
-            onChange={(e) => update("id_cliente", e.target.value)}
+            onChange={(e) => {
+              update("id_cliente", e.target.value);
+              update("id_centro_cultivo", "");
+            }}
             options={clientes.map((c) => ({ value: c.id_cliente, label: c.nombre_cliente }))}
+          />
+          <SelectField
+            label="Centro de costo"
+            required
+            disabled={!form.id_cliente}
+            value={form.id_centro_cultivo}
+            onChange={(e) => update("id_centro_cultivo", e.target.value)}
+            placeholder={form.id_cliente ? "Selecciona..." : "Primero elige un cliente"}
+            options={centros.map((c) => ({ value: c.id_centro_cultivo, label: c.nombre_centro }))}
+          />
+          <TextField
+            label="Embarcación"
+            required
+            value={form.embarcacion}
+            onChange={(e) => update("embarcacion", e.target.value)}
+            placeholder="Ej: Lancha Puelche II"
           />
           <TextField
             label="Ubicación"
@@ -207,9 +276,9 @@ export function NuevaInmersion() {
         <Section title="Perfil de la inmersión">
           <TextField
             label="Profundidad máxima (mts)"
-            type="number"
-            step="0.1"
-            min={0}
+            type="text"
+            inputMode="decimal"
+            placeholder="Ej: 24,4 o 24.4"
             value={form.profundidad_maxima}
             onChange={(e) => update("profundidad_maxima", e.target.value)}
           />
@@ -265,8 +334,9 @@ export function NuevaInmersion() {
         <Section title="Condiciones">
           <TextField
             label="Temperatura del agua (°C)"
-            type="number"
-            step="0.1"
+            type="text"
+            inputMode="decimal"
+            placeholder="Ej: 12,5 o 12.5"
             value={form.temperatura_agua}
             onChange={(e) => update("temperatura_agua", e.target.value)}
           />
@@ -281,21 +351,21 @@ export function NuevaInmersion() {
         <Section title="Equipo">
           <SelectField
             label="Equipo utilizado"
-            value={form.numero_serie_ordenador}
-            onChange={(e) => update("numero_serie_ordenador", e.target.value)}
-            options={equipos.map((eq) => ({
-              value: eq.numero_serie_ordenador,
-              label: `${eq.numero_serie_ordenador} · ${eq.tipo_equipo_buceo}`,
-            }))}
+            value={form.id_equipo}
+            onChange={(e) => update("id_equipo", e.target.value)}
+            options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
           />
         </Section>
 
         <Section title="Tabulación y faena realizada">
-          <TextField
-            label="Tabulación"
-            value={form.tabulacion}
-            onChange={(e) => update("tabulacion", e.target.value)}
-            placeholder="Ej: Tabla US Navy"
+          <SelectField
+            label="Tabulación Tabla US Navy"
+            value={form.id_navy}
+            onChange={(e) => update("id_navy", e.target.value)}
+            options={tablaNavy.map((n) => ({
+              value: n.id_navy,
+              label: `${n.composicion}${n.observacion ? ` · ${n.observacion}` : ""}`,
+            }))}
           />
           <TextareaField
             label="Faena realizada"

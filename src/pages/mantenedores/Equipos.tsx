@@ -1,17 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../lib/auth";
 import { useCrud } from "../../lib/useCrud";
+import { supabase } from "../../lib/supabaseClient";
 import { equipoSchema, type EquipoForm } from "../../lib/validators";
 import { formatDate } from "../../lib/format";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Modal } from "../../components/Modal";
-import { TextField } from "../../components/FormField";
+import { TextField, SelectField } from "../../components/FormField";
 import { Badge } from "../../components/Badge";
 import type { Tables } from "../../lib/types";
 
 const empty: EquipoForm = {
-  numero_serie_ordenador: "",
-  tipo_equipo_buceo: "",
+  nombre_ordenador: "",
+  id_masc: "",
+  id_botella_aux: "",
+  id_botella_emer: "",
+  numero_serie_consola_aire: "",
+  fecha_calibracion_consola_aire: "",
+  numero_serie_consola_comunicaciones: "",
+  fecha_mantencion_consola_comunicaciones: "",
+  numero_serie_cargador_alta_presion: "",
+  fecha_mantencion_cargador_alta_presion: "",
   matricula_equipo: "",
   vencimiento_equipo: "",
 };
@@ -28,11 +37,27 @@ function estadoVencimiento(fecha: string | null): "activo" | "por_vencer" | "ven
 
 export function Equipos() {
   const { esEditor, esAdmin } = useAuth();
-  const { rows, loading, insert, update, remove } = useCrud("equipos", "numero_serie_ordenador");
+  const { rows, loading, insert, update, remove } = useCrud("equipos", "nombre_ordenador");
+  const [mascaras, setMascaras] = useState<Tables<"mascaras">[]>([]);
+  const [botellasAux, setBotellasAux] = useState<Tables<"botellas_aux">[]>([]);
+  const [botellasEmer, setBotellasEmer] = useState<Tables<"botellas_emer">[]>([]);
   const [modal, setModal] = useState<null | "nuevo" | Tables<"equipos">>(null);
   const [form, setForm] = useState<EquipoForm>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [m, ba, be] = await Promise.all([
+        supabase.from("mascaras").select("*").order("nombre_masc"),
+        supabase.from("botellas_aux").select("*").order("nombre_botella_aux"),
+        supabase.from("botellas_emer").select("*").order("nombre_botella_emer"),
+      ]);
+      setMascaras(m.data ?? []);
+      setBotellasAux(ba.data ?? []);
+      setBotellasEmer(be.data ?? []);
+    })();
+  }, []);
 
   function openNuevo() {
     setForm(empty);
@@ -41,8 +66,16 @@ export function Equipos() {
   }
   function openEditar(row: Tables<"equipos">) {
     setForm({
-      numero_serie_ordenador: row.numero_serie_ordenador,
-      tipo_equipo_buceo: row.tipo_equipo_buceo,
+      nombre_ordenador: row.nombre_ordenador,
+      id_masc: row.id_masc ?? "",
+      id_botella_aux: row.id_botella_aux ?? "",
+      id_botella_emer: row.id_botella_emer ?? "",
+      numero_serie_consola_aire: row.numero_serie_consola_aire ?? "",
+      fecha_calibracion_consola_aire: row.fecha_calibracion_consola_aire ?? "",
+      numero_serie_consola_comunicaciones: row.numero_serie_consola_comunicaciones ?? "",
+      fecha_mantencion_consola_comunicaciones: row.fecha_mantencion_consola_comunicaciones ?? "",
+      numero_serie_cargador_alta_presion: row.numero_serie_cargador_alta_presion ?? "",
+      fecha_mantencion_cargador_alta_presion: row.fecha_mantencion_cargador_alta_presion ?? "",
       matricula_equipo: row.matricula_equipo ?? "",
       vencimiento_equipo: row.vencimiento_equipo ?? "",
     });
@@ -59,29 +92,38 @@ export function Equipos() {
       return;
     }
     setSaving(true);
+    const d = parsed.data;
     const payload = {
-      ...parsed.data,
-      matricula_equipo: parsed.data.matricula_equipo || null,
-      vencimiento_equipo: parsed.data.vencimiento_equipo || null,
+      nombre_ordenador: d.nombre_ordenador,
+      id_masc: d.id_masc || null,
+      id_botella_aux: d.id_botella_aux || null,
+      id_botella_emer: d.id_botella_emer || null,
+      numero_serie_consola_aire: d.numero_serie_consola_aire || null,
+      fecha_calibracion_consola_aire: d.fecha_calibracion_consola_aire || null,
+      numero_serie_consola_comunicaciones: d.numero_serie_consola_comunicaciones || null,
+      fecha_mantencion_consola_comunicaciones: d.fecha_mantencion_consola_comunicaciones || null,
+      numero_serie_cargador_alta_presion: d.numero_serie_cargador_alta_presion || null,
+      fecha_mantencion_cargador_alta_presion: d.fecha_mantencion_cargador_alta_presion || null,
+      matricula_equipo: d.matricula_equipo || null,
+      vencimiento_equipo: d.vencimiento_equipo || null,
     };
     const err =
       modal === "nuevo"
         ? await insert(payload)
-        : await update({ numero_serie_ordenador: (modal as Tables<"equipos">).numero_serie_ordenador }, payload);
+        : await update({ id_equipo: (modal as Tables<"equipos">).id_equipo }, payload);
     setSaving(false);
     if (err) setErrors({ _global: err });
     else setModal(null);
   }
 
   async function handleDelete(row: Tables<"equipos">) {
-    if (!confirm(`¿Eliminar el equipo ${row.numero_serie_ordenador}?`)) return;
-    const err = await remove({ numero_serie_ordenador: row.numero_serie_ordenador });
+    if (!confirm(`¿Eliminar el equipo ${row.nombre_ordenador}?`)) return;
+    const err = await remove({ id_equipo: row.id_equipo });
     if (err) alert("No se pudo eliminar: " + err);
   }
 
   const columns: Column<Tables<"equipos">>[] = [
-    { header: "N° serie", cell: (r) => r.numero_serie_ordenador },
-    { header: "Tipo", cell: (r) => r.tipo_equipo_buceo },
+    { header: "Ordenador", cell: (r) => r.nombre_ordenador },
     { header: "Matrícula", cell: (r) => r.matricula_equipo ?? "—" },
     { header: "Vencimiento", cell: (r) => formatDate(r.vencimiento_equipo) },
     {
@@ -129,7 +171,7 @@ export function Equipos() {
         <DataTable
           columns={columns}
           rows={rows}
-          keyFn={(r) => r.numero_serie_ordenador}
+          keyFn={(r) => r.id_equipo}
           emptyMessage="Aún no hay equipos registrados."
         />
       )}
@@ -138,21 +180,63 @@ export function Equipos() {
         <Modal title={modal === "nuevo" ? "Nuevo equipo" : "Editar equipo"} onClose={() => setModal(null)}>
           <div className="space-y-4">
             <TextField
-              label="Número de serie del ordenador"
+              label="Nombre del ordenador"
               required
-              disabled={modal !== "nuevo"}
-              value={form.numero_serie_ordenador}
-              onChange={(e) => setForm({ ...form, numero_serie_ordenador: e.target.value })}
-              placeholder="ORD-2231"
-              error={errors.numero_serie_ordenador}
+              value={form.nombre_ordenador}
+              onChange={(e) => setForm({ ...form, nombre_ordenador: e.target.value })}
+              placeholder="Ej: Ordenador Suunto 04"
+              error={errors.nombre_ordenador}
+            />
+            <SelectField
+              label="Máscara"
+              value={form.id_masc ?? ""}
+              onChange={(e) => setForm({ ...form, id_masc: e.target.value })}
+              options={mascaras.map((m) => ({ value: m.id_masc, label: m.nombre_masc }))}
+            />
+            <SelectField
+              label="Botella banco auxiliar"
+              value={form.id_botella_aux ?? ""}
+              onChange={(e) => setForm({ ...form, id_botella_aux: e.target.value })}
+              options={botellasAux.map((b) => ({ value: b.id_botella_aux, label: b.nombre_botella_aux }))}
+            />
+            <SelectField
+              label="Botella banco emergencia"
+              value={form.id_botella_emer ?? ""}
+              onChange={(e) => setForm({ ...form, id_botella_emer: e.target.value })}
+              options={botellasEmer.map((b) => ({ value: b.id_botella_emer, label: b.nombre_botella_emer }))}
             />
             <TextField
-              label="Tipo de equipo"
-              required
-              value={form.tipo_equipo_buceo}
-              onChange={(e) => setForm({ ...form, tipo_equipo_buceo: e.target.value })}
-              placeholder="Ej: Semi-autónomo"
-              error={errors.tipo_equipo_buceo}
+              label="N° serie consola de aire"
+              value={form.numero_serie_consola_aire ?? ""}
+              onChange={(e) => setForm({ ...form, numero_serie_consola_aire: e.target.value })}
+            />
+            <TextField
+              label="Fecha calibración consola de aire"
+              type="date"
+              value={form.fecha_calibracion_consola_aire ?? ""}
+              onChange={(e) => setForm({ ...form, fecha_calibracion_consola_aire: e.target.value })}
+            />
+            <TextField
+              label="N° serie consola de comunicaciones"
+              value={form.numero_serie_consola_comunicaciones ?? ""}
+              onChange={(e) => setForm({ ...form, numero_serie_consola_comunicaciones: e.target.value })}
+            />
+            <TextField
+              label="Fecha mantención consola de comunicaciones"
+              type="date"
+              value={form.fecha_mantencion_consola_comunicaciones ?? ""}
+              onChange={(e) => setForm({ ...form, fecha_mantencion_consola_comunicaciones: e.target.value })}
+            />
+            <TextField
+              label="N° serie cargador de alta presión"
+              value={form.numero_serie_cargador_alta_presion ?? ""}
+              onChange={(e) => setForm({ ...form, numero_serie_cargador_alta_presion: e.target.value })}
+            />
+            <TextField
+              label="Fecha mantención cargador de alta presión"
+              type="date"
+              value={form.fecha_mantencion_cargador_alta_presion ?? ""}
+              onChange={(e) => setForm({ ...form, fecha_mantencion_cargador_alta_presion: e.target.value })}
             />
             <TextField
               label="Matrícula del equipo"

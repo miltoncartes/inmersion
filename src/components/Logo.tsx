@@ -1,7 +1,7 @@
-export function Logo({ size = 44 }: { size?: number }) {
+export function Logo({ size = 44, className = "" }: { size?: number; className?: string }) {
   return (
     <div
-      className="flex items-center justify-center rounded-2xl bg-gradient-to-br from-sky-600 to-navy-700 ring-1 ring-white/10"
+      className={`flex items-center justify-center rounded-2xl bg-gradient-to-br from-sky-600 to-navy-700 ring-1 ring-white/10 ${className}`}
       style={{ width: size, height: size }}
     >
       <svg

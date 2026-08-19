@@ -18,6 +18,9 @@ type AuthState = {
   rol: UserRole | null;
   esEditor: boolean;
   esAdmin: boolean;
+  esBuzo: boolean;
+  idBuzo: string | null;
+  puedeRegistrarInmersion: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, nombre: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -85,14 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const rol = perfil?.rol ?? null;
+  const esEditor = rol === "admin" || rol === "supervisor";
+  const esBuzo = rol === "buzo";
 
   const value: AuthState = {
     session,
     perfil,
     loading,
     rol,
-    esEditor: rol === "admin" || rol === "supervisor",
+    esEditor,
     esAdmin: rol === "admin",
+    esBuzo,
+    idBuzo: perfil?.id_buzo ?? null,
+    puedeRegistrarInmersion: esEditor || esBuzo,
     signIn,
     signUp,
     signOut,

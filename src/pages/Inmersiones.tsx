@@ -4,19 +4,22 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
 import { DataTable, type Column } from "../components/DataTable";
 import { EmptyState, AnchorIcon } from "../components/EmptyState";
+import { Badge } from "../components/Badge";
 import { formatDate } from "../lib/format";
+import type { EstadoValidacion } from "../lib/types";
 
 type Row = {
   id_inmersion: string;
   fecha_inmersion: string;
   ubicacion: string | null;
+  estado_validacion: EstadoValidacion;
   buzo: { nombre_buzo: string } | null;
   cliente: { nombre_cliente: string } | null;
   tiempos: { profundidad_maxima: number | null; tiempo_total_buceo: number | null } | null;
 };
 
 export function Inmersiones() {
-  const { esEditor } = useAuth();
+  const { puedeRegistrarInmersion } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -27,7 +30,7 @@ export function Inmersiones() {
       const { data } = await supabase
         .from("perfil_inmersion")
         .select(
-          "id_inmersion, fecha_inmersion, ubicacion, buzo:buzo!id_buzo(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima, tiempo_total_buceo)"
+          "id_inmersion, fecha_inmersion, ubicacion, estado_validacion, buzo:buzo!id_buzo(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima, tiempo_total_buceo)"
         )
         .order("fecha_inmersion", { ascending: false });
       setRows(
@@ -51,6 +54,10 @@ export function Inmersiones() {
   });
 
   const columns: Column<Row>[] = [
+    {
+      header: "Estado",
+      cell: (r) => <Badge tone={r.estado_validacion}>{r.estado_validacion === "validada" ? "Validada" : "Pendiente"}</Badge>,
+    },
     { header: "Fecha", cell: (r) => formatDate(r.fecha_inmersion) },
     { header: "Buzo", cell: (r) => r.buzo?.nombre_buzo ?? "—" },
     { header: "Cliente", cell: (r) => r.cliente?.nombre_cliente ?? "—" },
@@ -71,7 +78,7 @@ export function Inmersiones() {
     <div>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold text-slate-50">Inmersiones</h1>
-        {esEditor && (
+        {puedeRegistrarInmersion && (
           <Link to="/inmersiones/nueva" className="btn-primary">
             + Nueva inmersión
           </Link>
@@ -95,7 +102,7 @@ export function Inmersiones() {
           title="Tu bitácora está vacía"
           description="Registra tu primera inmersión para empezar a ver tus estadísticas y tu historial de buceo."
           action={
-            esEditor ? (
+            puedeRegistrarInmersion ? (
               <Link to="/inmersiones/nueva" className="btn-primary mt-2">
                 Registrar inmersión
               </Link>

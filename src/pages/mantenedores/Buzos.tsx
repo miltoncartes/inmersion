@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../lib/auth";
 import { useCrud } from "../../lib/useCrud";
+import { supabase } from "../../lib/supabaseClient";
 import { buzoSchema, type BuzoForm } from "../../lib/validators";
 import { formatRut, formatDate } from "../../lib/format";
 import { DataTable, type Column } from "../../components/DataTable";
@@ -16,11 +17,21 @@ const empty: BuzoForm = {
   clase_matricula: "",
   vencimiento_hipervarico: "",
   estado: "activo",
+  id_equipo_asignado: "",
 };
 
 export function Buzos() {
   const { esEditor, esAdmin } = useAuth();
   const { rows, loading, insert, update, remove } = useCrud("buzo", "nombre_buzo");
+  const [equipos, setEquipos] = useState<Tables<"equipos">[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("equipos")
+      .select("*")
+      .order("nombre_ordenador")
+      .then(({ data }) => setEquipos(data ?? []));
+  }, []);
   const [modal, setModal] = useState<null | "nuevo" | Tables<"buzo">>(null);
   const [form, setForm] = useState<BuzoForm>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -38,6 +49,7 @@ export function Buzos() {
       clase_matricula: row.clase_matricula ?? "",
       vencimiento_hipervarico: row.vencimiento_hipervarico ?? "",
       estado: row.estado as BuzoForm["estado"],
+      id_equipo_asignado: row.id_equipo_asignado ?? "",
     });
     setErrors({});
     setModal(row);
@@ -56,6 +68,7 @@ export function Buzos() {
       ...parsed.data,
       clase_matricula: parsed.data.clase_matricula || null,
       vencimiento_hipervarico: parsed.data.vencimiento_hipervarico || null,
+      id_equipo_asignado: parsed.data.id_equipo_asignado || null,
     };
     const err =
       modal === "nuevo"
@@ -77,6 +90,10 @@ export function Buzos() {
     { header: "RUT", cell: (r) => r.rut_buzo },
     { header: "Clase / matrícula", cell: (r) => r.clase_matricula ?? "—" },
     { header: "Venc. hiperbárico", cell: (r) => formatDate(r.vencimiento_hipervarico) },
+    {
+      header: "Ordenador asignado",
+      cell: (r) => equipos.find((e) => e.id_equipo === r.id_equipo_asignado)?.nombre_ordenador ?? "—",
+    },
     { header: "Estado", cell: (r) => <Badge tone={r.estado}>{r.estado}</Badge> },
     {
       header: "",
@@ -152,6 +169,12 @@ export function Buzos() {
               value={form.estado}
               onChange={(e) => setForm({ ...form, estado: e.target.value as BuzoForm["estado"] })}
               options={ESTADOS.map((v) => ({ value: v, label: v }))}
+            />
+            <SelectField
+              label="Ordenador asignado"
+              value={form.id_equipo_asignado ?? ""}
+              onChange={(e) => setForm({ ...form, id_equipo_asignado: e.target.value })}
+              options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
             />
             {errors._global && <p className="field-error">{errors._global}</p>}
             <button className="btn-primary w-full" onClick={handleSubmit} disabled={saving}>

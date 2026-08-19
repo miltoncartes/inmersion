@@ -12,12 +12,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      botellas_aux: {
+        Row: {
+          created_at: string
+          fecha_venc_aux: string | null
+          id_botella_aux: string
+          nombre_botella_aux: string
+          observacion: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fecha_venc_aux?: string | null
+          id_botella_aux?: string
+          nombre_botella_aux: string
+          observacion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fecha_venc_aux?: string | null
+          id_botella_aux?: string
+          nombre_botella_aux?: string
+          observacion?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      botellas_emer: {
+        Row: {
+          created_at: string
+          fecha_venc_emer: string | null
+          id_botella_emer: string
+          nombre_botella_emer: string
+          observacion: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fecha_venc_emer?: string | null
+          id_botella_emer?: string
+          nombre_botella_emer: string
+          observacion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fecha_venc_emer?: string | null
+          id_botella_emer?: string
+          nombre_botella_emer?: string
+          observacion?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       buzo: {
         Row: {
           clase_matricula: string | null
           created_at: string
           estado: string
           id_buzo: string
+          id_equipo_asignado: string | null
           nombre_buzo: string
           rut_buzo: string
           updated_at: string
@@ -28,6 +83,7 @@ export type Database = {
           created_at?: string
           estado?: string
           id_buzo?: string
+          id_equipo_asignado?: string | null
           nombre_buzo: string
           rut_buzo: string
           updated_at?: string
@@ -38,12 +94,53 @@ export type Database = {
           created_at?: string
           estado?: string
           id_buzo?: string
+          id_equipo_asignado?: string | null
           nombre_buzo?: string
           rut_buzo?: string
           updated_at?: string
           vencimiento_hipervarico?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "buzo_id_equipo_asignado_fkey"
+            columns: ["id_equipo_asignado"]
+            isOneToOne: false
+            referencedRelation: "equipos"
+            referencedColumns: ["id_equipo"]
+          },
+        ]
+      }
+      centro_cultivo: {
+        Row: {
+          created_at: string
+          id_centro_cultivo: string
+          id_cliente: string
+          nombre_centro: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id_centro_cultivo?: string
+          id_cliente: string
+          nombre_centro: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id_centro_cultivo?: string
+          id_cliente?: string
+          nombre_centro?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centro_cultivo_id_cliente_fkey"
+            columns: ["id_cliente"]
+            isOneToOne: false
+            referencedRelation: "cliente"
+            referencedColumns: ["id_cliente"]
+          },
+        ]
       }
       cliente: {
         Row: {
@@ -72,27 +169,103 @@ export type Database = {
       equipos: {
         Row: {
           created_at: string
+          fecha_calibracion_consola_aire: string | null
+          fecha_mantencion_cargador_alta_presion: string | null
+          fecha_mantencion_consola_comunicaciones: string | null
+          id_botella_aux: string | null
+          id_botella_emer: string | null
+          id_equipo: string
+          id_masc: string | null
           matricula_equipo: string | null
-          numero_serie_ordenador: string
-          tipo_equipo_buceo: string
+          nombre_ordenador: string
+          numero_serie_cargador_alta_presion: string | null
+          numero_serie_consola_aire: string | null
+          numero_serie_consola_comunicaciones: string | null
           updated_at: string
           vencimiento_equipo: string | null
         }
         Insert: {
           created_at?: string
+          fecha_calibracion_consola_aire?: string | null
+          fecha_mantencion_cargador_alta_presion?: string | null
+          fecha_mantencion_consola_comunicaciones?: string | null
+          id_botella_aux?: string | null
+          id_botella_emer?: string | null
+          id_equipo?: string
+          id_masc?: string | null
           matricula_equipo?: string | null
-          numero_serie_ordenador: string
-          tipo_equipo_buceo: string
+          nombre_ordenador: string
+          numero_serie_cargador_alta_presion?: string | null
+          numero_serie_consola_aire?: string | null
+          numero_serie_consola_comunicaciones?: string | null
           updated_at?: string
           vencimiento_equipo?: string | null
         }
         Update: {
           created_at?: string
+          fecha_calibracion_consola_aire?: string | null
+          fecha_mantencion_cargador_alta_presion?: string | null
+          fecha_mantencion_consola_comunicaciones?: string | null
+          id_botella_aux?: string | null
+          id_botella_emer?: string | null
+          id_equipo?: string
+          id_masc?: string | null
           matricula_equipo?: string | null
-          numero_serie_ordenador?: string
-          tipo_equipo_buceo?: string
+          nombre_ordenador?: string
+          numero_serie_cargador_alta_presion?: string | null
+          numero_serie_consola_aire?: string | null
+          numero_serie_consola_comunicaciones?: string | null
           updated_at?: string
           vencimiento_equipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipos_id_botella_aux_fkey"
+            columns: ["id_botella_aux"]
+            isOneToOne: false
+            referencedRelation: "botellas_aux"
+            referencedColumns: ["id_botella_aux"]
+          },
+          {
+            foreignKeyName: "equipos_id_botella_emer_fkey"
+            columns: ["id_botella_emer"]
+            isOneToOne: false
+            referencedRelation: "botellas_emer"
+            referencedColumns: ["id_botella_emer"]
+          },
+          {
+            foreignKeyName: "equipos_id_masc_fkey"
+            columns: ["id_masc"]
+            isOneToOne: false
+            referencedRelation: "mascaras"
+            referencedColumns: ["id_masc"]
+          },
+        ]
+      }
+      mascaras: {
+        Row: {
+          created_at: string
+          fecha_mant_masc: string | null
+          id_masc: string
+          nombre_masc: string
+          observacion: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fecha_mant_masc?: string | null
+          id_masc?: string
+          nombre_masc: string
+          observacion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fecha_mant_masc?: string | null
+          id_masc?: string
+          nombre_masc?: string
+          observacion?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -100,7 +273,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          embarcacion: string | null
           estado_mar: string | null
+          estado_validacion: Database["public"]["Enums"]["estado_validacion_inmersion"]
           faena_realizada: string | null
           fecha_inmersion: string
           hora_dejo_fondo: string | null
@@ -108,18 +283,25 @@ export type Database = {
           hora_llego_fondo: string | null
           hora_llego_superficie: string | null
           id_buzo: string
+          id_buzo_emergencia: string | null
+          id_centro_cultivo: string | null
           id_cliente: string | null
+          id_equipo: string | null
           id_inmersion: string
           id_supervisor: string | null
-          numero_serie_ordenador: string | null
+          observacion_admin: string | null
           temperatura_agua: number | null
           ubicacion: string | null
           updated_at: string
+          validado_at: string | null
+          validado_por: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          embarcacion?: string | null
           estado_mar?: string | null
+          estado_validacion?: Database["public"]["Enums"]["estado_validacion_inmersion"]
           faena_realizada?: string | null
           fecha_inmersion: string
           hora_dejo_fondo?: string | null
@@ -127,18 +309,25 @@ export type Database = {
           hora_llego_fondo?: string | null
           hora_llego_superficie?: string | null
           id_buzo: string
+          id_buzo_emergencia?: string | null
+          id_centro_cultivo?: string | null
           id_cliente?: string | null
+          id_equipo?: string | null
           id_inmersion?: string
           id_supervisor?: string | null
-          numero_serie_ordenador?: string | null
+          observacion_admin?: string | null
           temperatura_agua?: number | null
           ubicacion?: string | null
           updated_at?: string
+          validado_at?: string | null
+          validado_por?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          embarcacion?: string | null
           estado_mar?: string | null
+          estado_validacion?: Database["public"]["Enums"]["estado_validacion_inmersion"]
           faena_realizada?: string | null
           fecha_inmersion?: string
           hora_dejo_fondo?: string | null
@@ -146,13 +335,18 @@ export type Database = {
           hora_llego_fondo?: string | null
           hora_llego_superficie?: string | null
           id_buzo?: string
+          id_buzo_emergencia?: string | null
+          id_centro_cultivo?: string | null
           id_cliente?: string | null
+          id_equipo?: string | null
           id_inmersion?: string
           id_supervisor?: string | null
-          numero_serie_ordenador?: string | null
+          observacion_admin?: string | null
           temperatura_agua?: number | null
           ubicacion?: string | null
           updated_at?: string
+          validado_at?: string | null
+          validado_por?: string | null
         }
         Relationships: [
           {
@@ -163,11 +357,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "perfil_inmersion_id_buzo_emergencia_fkey"
+            columns: ["id_buzo_emergencia"]
+            isOneToOne: false
+            referencedRelation: "buzo"
+            referencedColumns: ["id_buzo"]
+          },
+          {
             foreignKeyName: "perfil_inmersion_id_buzo_fkey"
             columns: ["id_buzo"]
             isOneToOne: false
             referencedRelation: "buzo"
             referencedColumns: ["id_buzo"]
+          },
+          {
+            foreignKeyName: "perfil_inmersion_id_centro_cultivo_fkey"
+            columns: ["id_centro_cultivo"]
+            isOneToOne: false
+            referencedRelation: "centro_cultivo"
+            referencedColumns: ["id_centro_cultivo"]
           },
           {
             foreignKeyName: "perfil_inmersion_id_cliente_fkey"
@@ -177,6 +385,13 @@ export type Database = {
             referencedColumns: ["id_cliente"]
           },
           {
+            foreignKeyName: "perfil_inmersion_id_equipo_fkey"
+            columns: ["id_equipo"]
+            isOneToOne: false
+            referencedRelation: "equipos"
+            referencedColumns: ["id_equipo"]
+          },
+          {
             foreignKeyName: "perfil_inmersion_id_supervisor_fkey"
             columns: ["id_supervisor"]
             isOneToOne: false
@@ -184,11 +399,11 @@ export type Database = {
             referencedColumns: ["id_supervisor"]
           },
           {
-            foreignKeyName: "perfil_inmersion_numero_serie_ordenador_fkey"
-            columns: ["numero_serie_ordenador"]
+            foreignKeyName: "perfil_inmersion_validado_por_fkey"
+            columns: ["validado_por"]
             isOneToOne: false
-            referencedRelation: "equipos"
-            referencedColumns: ["numero_serie_ordenador"]
+            referencedRelation: "usuarios_app"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -216,13 +431,34 @@ export type Database = {
         }
         Relationships: []
       }
+      tabla_us_navy: {
+        Row: {
+          composicion: string
+          id_navy: string
+          observacion: string | null
+          orden: number
+        }
+        Insert: {
+          composicion: string
+          id_navy?: string
+          observacion?: string | null
+          orden: number
+        }
+        Update: {
+          composicion?: string
+          id_navy?: string
+          observacion?: string | null
+          orden?: number
+        }
+        Relationships: []
+      }
       tiempos_totales: {
         Row: {
           created_at: string
           id_buzo: string
           id_inmersion: string
+          id_navy: string | null
           profundidad_maxima: number | null
-          tabulacion: string | null
           tiempo_total_buceo: number | null
           tiempo_total_descompresion: number | null
           tiempo_total_fondo: number | null
@@ -232,8 +468,8 @@ export type Database = {
           created_at?: string
           id_buzo: string
           id_inmersion: string
+          id_navy?: string | null
           profundidad_maxima?: number | null
-          tabulacion?: string | null
           tiempo_total_buceo?: number | null
           tiempo_total_descompresion?: number | null
           tiempo_total_fondo?: number | null
@@ -243,8 +479,8 @@ export type Database = {
           created_at?: string
           id_buzo?: string
           id_inmersion?: string
+          id_navy?: string | null
           profundidad_maxima?: number | null
-          tabulacion?: string | null
           tiempo_total_buceo?: number | null
           tiempo_total_descompresion?: number | null
           tiempo_total_fondo?: number | null
@@ -265,6 +501,13 @@ export type Database = {
             referencedRelation: "perfil_inmersion"
             referencedColumns: ["id_inmersion"]
           },
+          {
+            foreignKeyName: "tiempos_totales_id_navy_fkey"
+            columns: ["id_navy"]
+            isOneToOne: false
+            referencedRelation: "tabla_us_navy"
+            referencedColumns: ["id_navy"]
+          },
         ]
       }
       usuarios_app: {
@@ -272,6 +515,7 @@ export type Database = {
           activo: boolean
           created_at: string
           id: string
+          id_buzo: string | null
           nombre: string
           rol: Database["public"]["Enums"]["user_role"]
           updated_at: string
@@ -280,6 +524,7 @@ export type Database = {
           activo?: boolean
           created_at?: string
           id: string
+          id_buzo?: string | null
           nombre: string
           rol?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
@@ -288,11 +533,20 @@ export type Database = {
           activo?: boolean
           created_at?: string
           id?: string
+          id_buzo?: string | null
           nombre?: string
           rol?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_app_id_buzo_fkey"
+            columns: ["id_buzo"]
+            isOneToOne: false
+            referencedRelation: "buzo"
+            referencedColumns: ["id_buzo"]
+          },
+        ]
       }
     }
     Views: {
@@ -302,9 +556,11 @@ export type Database = {
       is_active_user: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_editor: { Args: never; Returns: boolean }
+      mi_id_buzo: { Args: never; Returns: string }
     }
     Enums: {
-      user_role: "admin" | "supervisor" | "lectura"
+      estado_validacion_inmersion: "pendiente" | "validada"
+      user_role: "admin" | "supervisor" | "buzo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -321,3 +577,4 @@ export type TablesInsert<T extends keyof DefaultSchema["Tables"]> =
 export type TablesUpdate<T extends keyof DefaultSchema["Tables"]> =
   DefaultSchema["Tables"][T]["Update"]
 export type UserRole = Database["public"]["Enums"]["user_role"]
+export type EstadoValidacion = Database["public"]["Enums"]["estado_validacion_inmersion"]

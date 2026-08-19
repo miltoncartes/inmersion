@@ -52,3 +52,10 @@ export function minutesBetween(start: string | null, end: string | null): number
 export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+/** Acepta "24,4" o "24.4" y devuelve el número, o null si no es válido. */
+export function parseDecimal(value: string): number | null {
+  if (!value.trim()) return null;
+  const n = Number(value.replace(",", "."));
+  return Number.isNaN(n) ? null : n;
+}
