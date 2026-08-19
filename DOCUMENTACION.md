@@ -468,3 +468,54 @@ Supabase mantiene backups automáticos diarios en el plan free (retención limit
 | "row-level security policy" al guardar | El usuario no tiene el rol necesario (`supervisor`/`admin`) o su fila en `usuarios_app` tiene `activo = false` |
 | No puedo desplegar a Vercel | Confirmar sesión con `npx vercel login`; revisar Deployment Protection si la URL pide autenticación |
 | `git push` pide usuario/clave | Configurar un Personal Access Token de GitHub o `gh auth login` |
+
+---
+
+## 15. Cambios versión 1.2.0 (Fase 3)
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 15.1 Tabla US Navy: ahora es un mantenedor
+Se recreó **vacía** con solo `id_navy`, `composicion` y `observacion`, administrable desde `/mantenedores/tabla-us-navy`. Lo que se cargue ahí es exactamente lo que aparece en el desplegable "Tabulación Tabla US Navy" al registrar una inmersión; si está vacío, el formulario lo advierte. Al vaciar el catálogo se perdió la tabulación asociada a una de las 3 inmersiones históricas (consecuencia esperada).
+
+### 15.2 La tabulación se guarda en la inmersión
+El campo pasó de `tiempos_totales.id_navy` a **`perfil_inmersion.id_navy`** (FK → `tabla_us_navy`, `ON DELETE RESTRICT`), que es donde se selecciona en la interfaz. La composición no se duplica como texto: se lee por la relación.
+
+### 15.3 Mantenedor de buzos: correo y habilitación
+| Columna nueva | Tipo | Descripción |
+|---|---|---|
+| email | text (único, case-insensitive) | Correo con el que el buzo creará su cuenta |
+| habilitado | boolean NOT NULL default false | Todo buzo nuevo nace deshabilitado |
+
+Flujo: admin/supervisor carga al buzo con su correo → queda deshabilitado → lo habilita desde el botón de la tabla → recién ahí el buzo puede crear cuenta. No se puede habilitar un buzo sin correo registrado.
+
+### 15.4 Registro de cuentas controlado
+| Situación | Resultado |
+|---|---|
+| Correo de buzo habilitado | Crea la cuenta ligada a su ficha, rol buzo, activa |
+| Correo de buzo NO habilitado | "Tu ficha de buzo existe pero aún no está habilitada..." |
+| Correo no registrado como buzo | "Este correo no está registrado como buzo en el sistema..." |
+
+El trigger `handle_new_user` aplica la misma regla en la base de datos, así que no se puede saltar desde el cliente. Las cuentas que no correspondan a un buzo quedan inactivas hasta que un admin les asigne rol.
+
+### 15.5 Recuperación de contraseña (solo admin y supervisor)
+Enlace en la pantalla de ingreso. `puede_recuperar_password(email)` valida en el servidor que el correo sea de un admin/supervisor activo antes de enviar el correo; la UI responde siempre lo mismo para no revelar qué correos existen. El enlace lleva a `/nueva-password`. Los buzos no tienen recuperación por correo.
+
+### 15.6 Mensajes de error explicativos
+Nuevo módulo `src/lib/errores.ts`: traduce errores de Postgres/RLS a la causa concreta (horas fuera de orden, buzo de emergencia repetido, falta de permisos por rol, cliente sin centros de cultivo, buzo sin ficha ligada, inmersión ya validada, sin conexión).
+
+### 15.7 Usuario en sesión visible
+Nombre y rol del usuario conectado en la barra lateral (escritorio) y en la cabecera superior (móvil).
+
+### 15.8 Acceso de los buzos
+Un usuario con rol buzo no ve Mantenedores ni Administración (ocultos en la navegación), con las rutas protegidas en el enrutador además de por RLS.
+
+### 15.9 Correcciones técnicas
+- Reparadas cuentas sin perfil en `usuarios_app`; el ingreso sin perfil queda bloqueado con mensaje explicativo.
+- Corregidos todos los errores de tipos del proyecto: `tsc --noEmit` pasa limpio.
+
+### 15.10 Rutas nuevas
+| Ruta | Pantalla | Acceso |
+|---|---|---|
+| /nueva-password | Definir nueva contraseña desde el enlace del correo | público (con enlace válido) |
+| /mantenedores/tabla-us-navy | Mantenedor Tabla US Navy | admin / supervisor |
