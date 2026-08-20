@@ -86,6 +86,15 @@ export function Login() {
         p_email: email.trim(),
       });
 
+      if (estado === "ya_tiene_cuenta") {
+        // Supabase no reenvía confirmación cuando la cuenta ya existe: hay que
+        // decirlo, o el usuario queda esperando un correo que nunca sale.
+        setError(
+          "Este correo ya tiene una cuenta creada. Usa la pestaña Ingresar. Si no recuerdas la contraseña, entra a \"¿Olvidaste tu contraseña?\"."
+        );
+        return;
+      }
+
       if (estado === "no_registrado") {
         setError(
           "Este correo no está registrado como buzo en el sistema. Pide a un administrador o supervisor que te cargue en el mantenedor de buzos con este correo."
