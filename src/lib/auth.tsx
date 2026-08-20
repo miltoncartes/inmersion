@@ -15,6 +15,9 @@ type AuthState = {
   session: Session | null;
   perfil: Perfil | null;
   loading: boolean;
+  /** Se pobló si la última consulta del perfil falló por un error real
+   * (red, permisos), a diferencia de que el perfil simplemente no exista. */
+  perfilError: string | null;
   rol: UserRole | null;
   esEditor: boolean;
   esAdmin: boolean;
@@ -33,13 +36,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [loading, setLoading] = useState(true);
+  const [perfilError, setPerfilError] = useState<string | null>(null);
 
   async function loadPerfil(userId: string) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("usuarios_app")
       .select("*")
       .eq("id", userId)
       .maybeSingle();
+
+    if (error) {
+      // Un error real (red, permisos) no es lo mismo que "no tiene perfil":
+      // no lo tratamos como si la cuenta no existiera.
+      setPerfilError(error.message);
+      return;
+    }
+    setPerfilError(null);
     setPerfil(data ?? null);
   }
 
@@ -60,9 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
-        loadPerfil(newSession.user.id);
+        // Se mantiene loading=true mientras se trae el perfil recién logueado:
+        // sin esto, la pantalla alcanza a mostrar "sin perfil" por una
+        // fracción de segundo en cada inicio de sesión, antes de que llegue
+        // la respuesta real.
+        setLoading(true);
+        loadPerfil(newSession.user.id).finally(() => setLoading(false));
       } else {
         setPerfil(null);
+        setPerfilError(null);
       }
     });
 
@@ -95,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     perfil,
     loading,
+    perfilError,
     rol,
     esEditor,
     esAdmin: rol === "admin",
