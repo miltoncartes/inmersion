@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Logo } from "./Logo";
+import { Footer } from "./Footer";
 import { useAuth } from "../lib/auth";
 
 const navItems = [
@@ -74,6 +75,8 @@ export function Layout() {
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 md:px-8 md:py-8">
           <Outlet />
         </main>
+
+        <Footer />
       </div>
     </div>
   );

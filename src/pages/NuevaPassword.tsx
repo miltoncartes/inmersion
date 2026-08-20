@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
+import { Footer } from "../components/Footer";
 import { supabase } from "../lib/supabaseClient";
 
 /**
@@ -56,7 +57,8 @@ export function NuevaPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-navy-950 px-4 py-10">
+    <div className="flex min-h-screen flex-col bg-navy-950">
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <Logo size={56} />
@@ -116,6 +118,9 @@ export function NuevaPassword() {
           )}
         </div>
       </div>
+      </div>
+
+      <Footer />
     </div>
   );
 }
