@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
 import { StatTile } from "../components/StatTile";
 import { EmptyState, AnchorIcon } from "../components/EmptyState";
+import { mensajeDeError } from "../lib/errores";
 import { formatDate } from "../lib/format";
 
 type Recent = {
@@ -21,6 +22,7 @@ export function Dashboard() {
   const [vencimientos, setVencimientos] = useState(0);
   const [recientes, setRecientes] = useState<Recent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -48,10 +50,17 @@ export function Dashboard() {
           .gte("vencimiento_equipo", hoyISO),
         supabase
           .from("perfil_inmersion")
-          .select("id_inmersion, fecha_inmersion, ubicacion, buzo:buzo!id_buzo(nombre_buzo)")
+          .select(
+            "id_inmersion, fecha_inmersion, ubicacion, buzo:buzo!perfil_inmersion_id_buzo_fkey(nombre_buzo)"
+          )
           .order("fecha_inmersion", { ascending: false })
           .limit(5),
       ]);
+
+      // Si alguna consulta falla hay que decirlo: mostrar "bitácora vacía"
+      // cuando en realidad hubo un error oculta el problema real.
+      const fallo = [mes, historico, buzos, vencBuzos, vencEquipos, recent].find((r) => r.error);
+      setError(fallo?.error ? mensajeDeError(fallo.error, "cargar el resumen") : null);
 
       setTotalMes(mes.count ?? 0);
       setTotalHistorico(historico.count ?? 0);
@@ -68,6 +77,12 @@ export function Dashboard() {
         <p className="eyebrow">Bienvenido</p>
         <h1 className="text-xl font-semibold text-slate-50">{perfil?.nombre ?? "—"}</h1>
       </div>
+
+      {error && (
+        <div className="card mb-4 border-red-500/30 p-4">
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-slate-400">Cargando…</p>

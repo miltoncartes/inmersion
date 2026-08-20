@@ -30,7 +30,7 @@ export function Inmersiones() {
       const { data } = await supabase
         .from("perfil_inmersion")
         .select(
-          "id_inmersion, fecha_inmersion, ubicacion, estado_validacion, buzo:buzo!id_buzo(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima, tiempo_total_buceo)"
+          "id_inmersion, fecha_inmersion, ubicacion, estado_validacion, buzo:buzo!perfil_inmersion_id_buzo_fkey(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima, tiempo_total_buceo)"
         )
         .order("fecha_inmersion", { ascending: false });
       setRows(

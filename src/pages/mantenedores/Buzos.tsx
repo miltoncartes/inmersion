@@ -99,32 +99,69 @@ export function Buzos() {
   }
 
   async function handleDelete(row: Tables<"buzo">) {
-    if (!confirm(`¿Eliminar a ${row.nombre_buzo}?`)) return;
+    // Antes de borrar avisamos cuánta información de inmersiones se pierde,
+    // porque el borrado arrastra todo el historial del buzo.
+    const { count, error: countError } = await supabase
+      .from("perfil_inmersion")
+      .select("id_inmersion", { count: "exact", head: true })
+      .eq("id_buzo", row.id_buzo);
+
+    if (countError) {
+      alert(mensajeDeError(countError, "verificar las inmersiones del buzo"));
+      return;
+    }
+
+    const inmersiones = count ?? 0;
+
+    if (inmersiones > 0) {
+      const confirmado = confirm(
+        `ATENCIÓN: ${row.nombre_buzo} tiene ${inmersiones} ${
+          inmersiones === 1 ? "inmersión registrada" : "inmersiones registradas"
+        }.\n\n` +
+          `Si eliminas a este buzo se perderá TODA la información de esas inmersiones ` +
+          `(perfil, tiempos totales y tabulación). Esta acción no se puede deshacer.\n\n` +
+          `¿Confirmas que quieres eliminarlo junto con su historial?`
+      );
+      if (!confirmado) return;
+    } else if (!confirm(`¿Eliminar a ${row.nombre_buzo}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
     const err = await remove({ id_buzo: row.id_buzo });
-    if (err) alert(mensajeDeError({ message: err }, "eliminar"));
+    if (err) alert(mensajeDeError({ message: err }, "eliminar el buzo"));
   }
 
   const columns: Column<Tables<"buzo">>[] = [
-    { header: "Nombre", cell: (r) => r.nombre_buzo },
-    { header: "RUT", cell: (r) => r.rut_buzo },
-    { header: "Correo", cell: (r) => r.email ?? "—" },
-    { header: "Clase / matrícula", cell: (r) => r.clase_matricula ?? "—" },
-    { header: "Venc. hiperbárico", cell: (r) => formatDate(r.vencimiento_hipervarico) },
+    {
+      header: "Nombre",
+      cell: (r) => r.nombre_buzo,
+      className: "whitespace-nowrap font-medium min-w-[230px]",
+    },
+    { header: "RUT", cell: (r) => r.rut_buzo, className: "whitespace-nowrap min-w-[120px]" },
+    { header: "Correo", cell: (r) => r.email ?? "—", className: "whitespace-nowrap" },
+    {
+      header: "Clase / matrícula",
+      cell: (r) => r.clase_matricula ?? "—",
+      className: "whitespace-nowrap",
+    },
+    {
+      header: "Venc. hiperbárico",
+      cell: (r) => formatDate(r.vencimiento_hipervarico),
+      className: "whitespace-nowrap",
+    },
     {
       header: "Ordenador asignado",
       cell: (r) => equipos.find((e) => e.id_equipo === r.id_equipo_asignado)?.nombre_ordenador ?? "—",
+      className: "whitespace-nowrap",
     },
-    { header: "Estado", cell: (r) => <Badge tone={r.estado}>{r.estado}</Badge> },
     {
-      header: "Acceso",
-      cell: (r) => (
-        <Badge tone={r.habilitado ? "activo" : "inactivo"}>
-          {r.habilitado ? "habilitado" : "deshabilitado"}
-        </Badge>
-      ),
+      header: "Estado",
+      cell: (r) => <Badge tone={r.estado}>{r.estado}</Badge>,
+      className: "whitespace-nowrap",
     },
     {
       header: "",
+      className: "whitespace-nowrap",
       cell: (r) =>
         esEditor ? (
           <div className="flex gap-2">

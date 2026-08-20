@@ -39,7 +39,7 @@ export function DetalleInmersion() {
     const { data: row } = await supabase
       .from("perfil_inmersion")
       .select(
-        "*, buzo:buzo!id_buzo(*), buzo_emergencia:buzo!id_buzo_emergencia(*), supervisor:supervisor!id_supervisor(*), cliente:cliente!id_cliente(*), centro_cultivo:centro_cultivo!id_centro_cultivo(*), equipo:equipos!id_equipo(*), tabulacion:tabla_us_navy!id_navy(*), tiempos:tiempos_totales!id_inmersion(*)"
+        "*, buzo:buzo!perfil_inmersion_id_buzo_fkey(*), buzo_emergencia:buzo!perfil_inmersion_id_buzo_emergencia_fkey(*), supervisor:supervisor!id_supervisor(*), cliente:cliente!id_cliente(*), centro_cultivo:centro_cultivo!id_centro_cultivo(*), equipo:equipos!id_equipo(*), tabulacion:tabla_us_navy!id_navy(*), tiempos:tiempos_totales!id_inmersion(*)"
       )
       .eq("id_inmersion", id)
       .maybeSingle();
