@@ -38,7 +38,7 @@ export function Login() {
       }
 
       if (mode === "recover") {
-        // Solo admin y supervisor pueden recuperar contraseña por correo. Se
+        // Disponible para cualquier usuario activo, sin importar su rol. Se
         // responde siempre lo mismo para no revelar qué correos existen.
         const { data: permitido } = await supabase.rpc("puede_recuperar_password", {
           p_email: email.trim(),
@@ -49,7 +49,7 @@ export function Login() {
           });
         }
         setInfo(
-          "Si el correo corresponde a una cuenta de administrador o supervisor, te enviamos un enlace para restablecer la contraseña. Revisa tu bandeja de entrada y la carpeta de spam."
+          "Si el correo corresponde a una cuenta registrada, te enviamos un enlace para restablecer la contraseña. Revisa tu bandeja de entrada y la carpeta de spam."
         );
         return;
       }
@@ -104,7 +104,7 @@ export function Login() {
             <div className="mb-5">
               <h2 className="text-base font-semibold text-slate-100">Recuperar contraseña</h2>
               <p className="mt-1 text-xs text-slate-400">
-                Disponible solo para cuentas de administrador y supervisor.
+                Te enviaremos un enlace al correo registrado en el sistema.
               </p>
             </div>
           ) : (
