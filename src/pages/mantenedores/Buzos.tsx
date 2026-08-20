@@ -109,17 +109,25 @@ export function Buzos() {
 
     const inmersiones = count ?? 0;
 
+    const avisoCuenta = row.email
+      ? `\n\nTambién se eliminará su cuenta de acceso (${row.email}): no podrá volver a ingresar al sistema.`
+      : "";
+
     if (inmersiones > 0) {
       const confirmado = confirm(
         `ATENCIÓN: ${row.nombre_buzo} tiene ${inmersiones} ${
           inmersiones === 1 ? "inmersión registrada" : "inmersiones registradas"
         }.\n\n` +
           `Si eliminas a este buzo se perderá TODA la información de esas inmersiones ` +
-          `(perfil, tiempos totales y tabulación). Esta acción no se puede deshacer.\n\n` +
-          `¿Confirmas que quieres eliminarlo junto con su historial?`
+          `(perfil, tiempos totales y tabulación).${avisoCuenta}\n\n` +
+          `Esta acción no se puede deshacer. ¿Confirmas que quieres eliminarlo?`
       );
       if (!confirmado) return;
-    } else if (!confirm(`¿Eliminar a ${row.nombre_buzo}? Esta acción no se puede deshacer.`)) {
+    } else if (
+      !confirm(
+        `¿Eliminar a ${row.nombre_buzo}?${avisoCuenta}\n\nEsta acción no se puede deshacer.`
+      )
+    ) {
       return;
     }
 

@@ -73,7 +73,15 @@ export function Supervisores() {
   }
 
   async function handleDelete(row: Tables<"supervisor">) {
-    if (!confirm(`¿Eliminar a ${row.nombre_super}? Esta acción no se puede deshacer.`)) return;
+    const avisoCuenta = row.email
+      ? `\n\nTambién se eliminará su cuenta de acceso (${row.email}): no podrá volver a ingresar al sistema.`
+      : "";
+    if (
+      !confirm(
+        `¿Eliminar a ${row.nombre_super}?${avisoCuenta}\n\nEsta acción no se puede deshacer.`
+      )
+    )
+      return;
     const err = await remove({ id_supervisor: row.id_supervisor });
     if (err) alert(mensajeDeError({ message: err }, "eliminar el supervisor"));
   }
