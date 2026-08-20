@@ -99,10 +99,10 @@ function SidebarContent({
 }) {
   return (
     <div className="flex h-full flex-col gap-6 p-5">
-      <div className="flex items-center gap-3">
-        <Logo size={40} />
+      <div className="flex flex-col items-center gap-2.5 text-center">
+        <Logo size={64} />
         <div>
-          <p className="text-sm font-semibold text-slate-50 leading-tight">MDIBUCEO</p>
+          <p className="text-base font-bold leading-tight text-slate-50">MDIBUCEO</p>
           <p className="eyebrow leading-tight">Puerto Varas</p>
         </div>
       </div>
@@ -130,7 +130,7 @@ function SidebarContent({
         )}
       </nav>
 
-      <div className="border-t border-navy-800 pt-4">
+      <div className="flex flex-col items-center border-t border-navy-800 pt-4 text-center">
         <p className="truncate text-sm font-medium text-slate-200">{nombre ?? "Usuario"}</p>
         <p className="eyebrow">{rol ?? "—"}</p>
         <button onClick={onSignOut} className="btn-secondary mt-3 w-full">
