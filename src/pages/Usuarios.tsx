@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../lib/auth";
 import { useCrud } from "../lib/useCrud";
 import { supabase } from "../lib/supabaseClient";
+import { mensajeDeError } from "../lib/errores";
 import { DataTable, type Column } from "../components/DataTable";
 import { Badge } from "../components/Badge";
 import type { Tables, UserRole } from "../lib/types";
@@ -8,7 +10,8 @@ import type { Tables, UserRole } from "../lib/types";
 const ROLES: UserRole[] = ["admin", "supervisor", "buzo"];
 
 export function Usuarios() {
-  const { rows, loading, update } = useCrud("usuarios_app", "nombre");
+  const { perfil } = useAuth();
+  const { rows, loading, update, reload } = useCrud("usuarios_app", "nombre");
   const [buzos, setBuzos] = useState<Tables<"buzo">[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
 
@@ -36,6 +39,26 @@ export function Usuarios() {
     setSavingId(row.id);
     await update({ id: row.id }, { activo });
     setSavingId(null);
+  }
+
+  async function eliminarUsuario(row: Tables<"usuarios_app">) {
+    const confirmado = confirm(
+      `¿Eliminar la cuenta de ${row.nombre} (rol ${row.rol})?\n\n` +
+        `Se borrará su acceso al sistema de forma permanente. Las inmersiones que haya ` +
+        `registrado se mantienen, pero dejarán de mostrar quién las creó.\n\n` +
+        `Esta acción no se puede deshacer.`
+    );
+    if (!confirmado) return;
+
+    setSavingId(row.id);
+    const { error } = await supabase.rpc("eliminar_usuario", { p_id: row.id });
+    setSavingId(null);
+
+    if (error) {
+      alert(mensajeDeError(error, "eliminar el usuario"));
+      return;
+    }
+    await reload();
   }
 
   const columns: Column<Tables<"usuarios_app">>[] = [
@@ -81,11 +104,32 @@ export function Usuarios() {
     { header: "Estado", cell: (r) => <Badge tone={r.activo ? "activo" : "inactivo"}>{r.activo ? "activo" : "inactivo"}</Badge> },
     {
       header: "",
-      cell: (r) => (
-        <button className="btn-ghost" disabled={savingId === r.id} onClick={() => cambiarActivo(r, !r.activo)}>
-          {r.activo ? "Desactivar" : "Activar"}
-        </button>
-      ),
+      className: "whitespace-nowrap",
+      cell: (r) => {
+        // Las cuentas de administrador no se eliminan desde aquí: primero hay
+        // que cambiarles el rol. Tampoco puedes eliminar tu propia cuenta.
+        const puedeEliminar = r.rol !== "admin" && r.id !== perfil?.id;
+        return (
+          <div className="flex gap-2">
+            <button
+              className="btn-ghost"
+              disabled={savingId === r.id}
+              onClick={() => cambiarActivo(r, !r.activo)}
+            >
+              {r.activo ? "Desactivar" : "Activar"}
+            </button>
+            {puedeEliminar && (
+              <button
+                className="btn-ghost text-red-400"
+                disabled={savingId === r.id}
+                onClick={() => eliminarUsuario(r)}
+              >
+                Eliminar
+              </button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 

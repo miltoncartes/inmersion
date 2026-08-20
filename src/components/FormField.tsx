@@ -44,6 +44,8 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   error?: string;
   options: { value: string; label: string }[];
   placeholder?: string;
+  /** Oculta la opción vacía inicial, para selects que siempre tienen valor. */
+  sinOpcionVacia?: boolean;
 };
 
 export function SelectField({
@@ -52,13 +54,14 @@ export function SelectField({
   error,
   options,
   placeholder = "Selecciona...",
+  sinOpcionVacia,
   className,
   ...props
 }: SelectProps) {
   return (
     <FieldWrap label={label} required={required} error={error}>
       <select className={`field-input ${className ?? ""}`} {...props}>
-        <option value="">{placeholder}</option>
+        {!sinOpcionVacia && <option value="">{placeholder}</option>}
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

@@ -70,6 +70,14 @@ export type BotellaEmerForm = z.infer<typeof botellaEmerSchema>;
 export const supervisorSchema = z.object({
   rut_super: rutSchema,
   nombre_super: z.string().min(2, "Nombre requerido"),
+  email: z
+    .string()
+    .trim()
+    .email("Correo electrónico inválido")
+    .or(z.literal(""))
+    .optional()
+    .nullable(),
+  fecha_vencimiento_matricula: z.string().optional().nullable(),
 });
 export type SupervisorForm = z.infer<typeof supervisorSchema>;
 

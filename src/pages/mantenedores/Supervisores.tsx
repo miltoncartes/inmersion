@@ -2,13 +2,28 @@ import { useState } from "react";
 import { useAuth } from "../../lib/auth";
 import { useCrud } from "../../lib/useCrud";
 import { supervisorSchema, type SupervisorForm } from "../../lib/validators";
-import { formatRut } from "../../lib/format";
+import { mensajeDeError } from "../../lib/errores";
+import { formatRut, formatDate } from "../../lib/format";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Modal } from "../../components/Modal";
 import { TextField } from "../../components/FormField";
+import { Badge } from "../../components/Badge";
 import type { Tables } from "../../lib/types";
 
-const empty: SupervisorForm = { rut_super: "", nombre_super: "" };
+const empty: SupervisorForm = {
+  rut_super: "",
+  nombre_super: "",
+  email: "",
+  fecha_vencimiento_matricula: "",
+};
+
+function estadoVencimiento(fecha: string | null): "activo" | "por_vencer" | "vencido" | null {
+  if (!fecha) return null;
+  const dias = (new Date(fecha).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+  if (dias < 0) return "vencido";
+  if (dias <= 30) return "por_vencer";
+  return "activo";
+}
 
 export function Supervisores() {
   const { esEditor, esAdmin } = useAuth();
@@ -24,7 +39,12 @@ export function Supervisores() {
     setModal("nuevo");
   }
   function openEditar(row: Tables<"supervisor">) {
-    setForm({ rut_super: row.rut_super, nombre_super: row.nombre_super });
+    setForm({
+      rut_super: row.rut_super,
+      nombre_super: row.nombre_super,
+      email: row.email ?? "",
+      fecha_vencimiento_matricula: row.fecha_vencimiento_matricula ?? "",
+    });
     setErrors({});
     setModal(row);
   }
@@ -38,26 +58,54 @@ export function Supervisores() {
       return;
     }
     setSaving(true);
+    const payload = {
+      ...parsed.data,
+      email: parsed.data.email?.trim() ? parsed.data.email.trim().toLowerCase() : null,
+      fecha_vencimiento_matricula: parsed.data.fecha_vencimiento_matricula || null,
+    };
     const err =
       modal === "nuevo"
-        ? await insert(parsed.data)
-        : await update({ id_supervisor: (modal as Tables<"supervisor">).id_supervisor }, parsed.data);
+        ? await insert(payload)
+        : await update({ id_supervisor: (modal as Tables<"supervisor">).id_supervisor }, payload);
     setSaving(false);
-    if (err) setErrors({ _global: err });
+    if (err) setErrors({ _global: mensajeDeError({ message: err }) });
     else setModal(null);
   }
 
   async function handleDelete(row: Tables<"supervisor">) {
-    if (!confirm(`¿Eliminar a ${row.nombre_super}?`)) return;
+    if (!confirm(`¿Eliminar a ${row.nombre_super}? Esta acción no se puede deshacer.`)) return;
     const err = await remove({ id_supervisor: row.id_supervisor });
-    if (err) alert("No se pudo eliminar: " + err);
+    if (err) alert(mensajeDeError({ message: err }, "eliminar el supervisor"));
   }
 
   const columns: Column<Tables<"supervisor">>[] = [
-    { header: "Nombre", cell: (r) => r.nombre_super },
-    { header: "RUT", cell: (r) => r.rut_super },
+    {
+      header: "Nombre",
+      cell: (r) => r.nombre_super,
+      className: "whitespace-nowrap font-medium min-w-[230px]",
+    },
+    { header: "RUT", cell: (r) => r.rut_super, className: "whitespace-nowrap min-w-[120px]" },
+    { header: "Correo", cell: (r) => r.email ?? "—", className: "whitespace-nowrap" },
+    {
+      header: "Venc. matrícula",
+      cell: (r) => formatDate(r.fecha_vencimiento_matricula),
+      className: "whitespace-nowrap",
+    },
+    {
+      header: "Estado matrícula",
+      className: "whitespace-nowrap",
+      cell: (r) => {
+        const estado = estadoVencimiento(r.fecha_vencimiento_matricula);
+        return estado ? (
+          <Badge tone={estado}>{estado.replace("_", " ")}</Badge>
+        ) : (
+          <span className="text-slate-500">—</span>
+        );
+      },
+    },
     {
       header: "",
+      className: "whitespace-nowrap",
       cell: (r) =>
         esEditor ? (
           <div className="flex gap-2">
@@ -112,6 +160,21 @@ export function Supervisores() {
               value={form.nombre_super}
               onChange={(e) => setForm({ ...form, nombre_super: e.target.value })}
               error={errors.nombre_super}
+            />
+            <TextField
+              label="Correo electrónico"
+              type="email"
+              value={form.email ?? ""}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="supervisor@correo.cl"
+              error={errors.email}
+            />
+            <TextField
+              label="Vencimiento de matrícula"
+              type="date"
+              value={form.fecha_vencimiento_matricula ?? ""}
+              onChange={(e) => setForm({ ...form, fecha_vencimiento_matricula: e.target.value })}
+              error={errors.fecha_vencimiento_matricula}
             />
             {errors._global && <p className="field-error">{errors._global}</p>}
             <button className="btn-primary w-full" onClick={handleSubmit} disabled={saving}>

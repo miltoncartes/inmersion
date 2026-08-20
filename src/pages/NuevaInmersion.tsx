@@ -383,10 +383,7 @@ export function NuevaInmersion() {
               placeholder={
                 tablaNavy.length === 0 ? "Sin composiciones cargadas" : "Selecciona..."
               }
-              options={tablaNavy.map((n) => ({
-                value: n.id_navy,
-                label: `${n.composicion}${n.observacion ? ` · ${n.observacion}` : ""}`,
-              }))}
+              options={tablaNavy.map((n) => ({ value: n.id_navy, label: n.composicion }))}
             />
             {tablaNavy.length === 0 && (
               <p className="mt-1 text-xs text-amber-400">

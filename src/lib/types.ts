@@ -426,6 +426,8 @@ export type Database = {
       supervisor: {
         Row: {
           created_at: string
+          email: string | null
+          fecha_vencimiento_matricula: string | null
           id_supervisor: string
           nombre_super: string
           rut_super: string
@@ -433,6 +435,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
+          fecha_vencimiento_matricula?: string | null
           id_supervisor?: string
           nombre_super: string
           rut_super: string
@@ -440,6 +444,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
+          fecha_vencimiento_matricula?: string | null
           id_supervisor?: string
           nombre_super?: string
           rut_super?: string
@@ -568,6 +574,7 @@ export type Database = {
       mi_id_buzo: { Args: never; Returns: string }
       puede_recuperar_password: { Args: { p_email: string }; Returns: boolean }
       estado_registro_email: { Args: { p_email: string }; Returns: string }
+      eliminar_usuario: { Args: { p_id: string }; Returns: undefined }
     }
     Enums: {
       estado_validacion_inmersion: "pendiente" | "validada"

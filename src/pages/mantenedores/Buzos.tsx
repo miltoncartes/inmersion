@@ -70,6 +70,13 @@ export function Buzos() {
       setErrors(fieldErrors);
       return;
     }
+    // Sin correo el buzo no puede crear su cuenta, así que no tiene sentido habilitarlo.
+    if (parsed.data.habilitado && !parsed.data.email?.trim()) {
+      setErrors({
+        email: "Para habilitar el acceso debes registrar el correo con el que el buzo creará su cuenta.",
+      });
+      return;
+    }
     setSaving(true);
     const payload = {
       ...parsed.data,
@@ -85,17 +92,6 @@ export function Buzos() {
     setSaving(false);
     if (err) setErrors({ _global: mensajeDeError({ message: err }) });
     else setModal(null);
-  }
-
-  async function toggleHabilitado(row: Tables<"buzo">) {
-    if (!row.habilitado && !row.email) {
-      alert("Para habilitar al buzo primero debes registrar su correo electrónico: es el correo con el que creará su cuenta.");
-      return;
-    }
-    const accion = row.habilitado ? "deshabilitar" : "habilitar";
-    if (!confirm(`¿Seguro que quieres ${accion} a ${row.nombre_buzo}?`)) return;
-    const err = await update({ id_buzo: row.id_buzo }, { habilitado: !row.habilitado });
-    if (err) alert(mensajeDeError({ message: err }, accion));
   }
 
   async function handleDelete(row: Tables<"buzo">) {
@@ -165,9 +161,6 @@ export function Buzos() {
       cell: (r) =>
         esEditor ? (
           <div className="flex gap-2">
-            <button className="btn-ghost" onClick={() => toggleHabilitado(r)}>
-              {r.habilitado ? "Deshabilitar" : "Habilitar"}
-            </button>
             <button className="btn-ghost" onClick={() => openEditar(r)}>
               Editar
             </button>
@@ -254,6 +247,17 @@ export function Buzos() {
               value={form.id_equipo_asignado ?? ""}
               onChange={(e) => setForm({ ...form, id_equipo_asignado: e.target.value })}
               options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
+            />
+            <SelectField
+              label="Acceso al sistema"
+              required
+              value={form.habilitado ? "si" : "no"}
+              onChange={(e) => setForm({ ...form, habilitado: e.target.value === "si" })}
+              sinOpcionVacia
+              options={[
+                { value: "no", label: "Sin acceso — no puede crear cuenta" },
+                { value: "si", label: "Habilitado — puede crear su cuenta" },
+              ]}
             />
             {errors._global && <p className="field-error">{errors._global}</p>}
             <button className="btn-primary w-full" onClick={handleSubmit} disabled={saving}>
