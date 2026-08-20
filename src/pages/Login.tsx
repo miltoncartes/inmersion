@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabaseClient";
+import { mensajeDeError } from "../lib/errores";
 
 type Mode = "signin" | "signup" | "recover";
 
@@ -38,18 +39,39 @@ export function Login() {
       }
 
       if (mode === "recover") {
-        // Disponible para cualquier usuario activo, sin importar su rol. Se
-        // responde siempre lo mismo para no revelar qué correos existen.
-        const { data: permitido } = await supabase.rpc("puede_recuperar_password", {
-          p_email: email.trim(),
-        });
-        if (permitido) {
-          await supabase.auth.resetPasswordForEmail(email.trim(), {
-            redirectTo: `${window.location.origin}/nueva-password`,
-          });
+        // Disponible para cualquier usuario activo, sin importar su rol.
+        // El mensaje dice la verdad: un mensaje genérico ocultaba los casos en
+        // que el correo nunca llegaba a enviarse y el usuario quedaba esperando.
+        const { data: permitido, error: rpcError } = await supabase.rpc(
+          "puede_recuperar_password",
+          { p_email: email.trim() }
+        );
+
+        if (rpcError) {
+          setError(mensajeDeError(rpcError, "verificar la cuenta"));
+          return;
         }
+
+        if (!permitido) {
+          setError(
+            "No encontramos una cuenta activa con ese correo. Revisa que esté bien escrito, o pide a un administrador que verifique el estado de tu cuenta."
+          );
+          return;
+        }
+
+        const { error: mailError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/nueva-password`,
+        });
+
+        if (mailError) {
+          setError(
+            `No se pudo enviar el correo de recuperación: ${mailError.message}. Contacta al administrador para que restablezca tu acceso.`
+          );
+          return;
+        }
+
         setInfo(
-          "Si el correo corresponde a una cuenta registrada, te enviamos un enlace para restablecer la contraseña. Revisa tu bandeja de entrada y la carpeta de spam."
+          `Enviamos un enlace a ${email.trim()}. Revisa tu bandeja de entrada y la carpeta de spam. Si no llega en unos minutos, avisa al administrador.`
         );
         return;
       }
