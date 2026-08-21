@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
-import { TextField, SelectField, TextareaField, TimeField } from "../components/FormField";
+import { TextField, SelectField, TextareaField } from "../components/FormField";
 import { mensajeDeError } from "../lib/errores";
 import { minutesBetween, todayISO, parseDecimal } from "../lib/format";
 import type { Tables } from "../lib/types";
@@ -356,29 +356,33 @@ export function NuevaInmersion() {
             value={form.profundidad_maxima}
             onChange={(e) => update("profundidad_maxima", e.target.value)}
           />
-          <TimeField
+          <TextField
             label="Dejó superficie (hora)"
+            type="time"
             required
             value={form.hora_dejo_superficie}
-            onChange={(v) => update("hora_dejo_superficie", v)}
+            onChange={(e) => update("hora_dejo_superficie", e.target.value)}
           />
-          <TimeField
+          <TextField
             label="Llegó fondo (hora)"
+            type="time"
             required
             value={form.hora_llego_fondo}
-            onChange={(v) => update("hora_llego_fondo", v)}
+            onChange={(e) => update("hora_llego_fondo", e.target.value)}
           />
-          <TimeField
+          <TextField
             label="Dejó fondo (hora)"
+            type="time"
             required
             value={form.hora_dejo_fondo}
-            onChange={(v) => update("hora_dejo_fondo", v)}
+            onChange={(e) => update("hora_dejo_fondo", e.target.value)}
           />
-          <TimeField
+          <TextField
             label="Llegó superficie (hora)"
+            type="time"
             required
             value={form.hora_llego_superficie}
-            onChange={(v) => update("hora_llego_superficie", v)}
+            onChange={(e) => update("hora_llego_superficie", e.target.value)}
           />
         </Section>
 
