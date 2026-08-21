@@ -72,6 +72,70 @@ export function SelectField({
   );
 }
 
+const HORAS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTOS = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+
+type TimeFieldProps = {
+  label: string;
+  required?: boolean;
+  error?: string;
+  /** Hora en formato "HH:MM", o cadena vacía si no se ha elegido. */
+  value: string;
+  onChange: (value: string) => void;
+};
+
+/**
+ * Selector de hora con dos <select> (hora / minuto) en vez de <input type="time">.
+ * El control nativo depende del selector del sistema operativo del navegador
+ * (spinner de Chrome, "wheel" de Safari, etc.) y en varios equipos no responde
+ * al intentar subir/bajar la hora. Con dos selects el comportamiento es
+ * siempre el mismo, sin importar navegador ni sistema operativo.
+ */
+export function TimeField({ label, required, error, value, onChange }: TimeFieldProps) {
+  const [hora, minuto] = value ? value.split(":") : ["", ""];
+
+  function actualizar(nuevaHora: string, nuevoMinuto: string) {
+    if (nuevaHora && nuevoMinuto) onChange(`${nuevaHora}:${nuevoMinuto}`);
+    else onChange("");
+  }
+
+  return (
+    <FieldWrap label={label} required={required} error={error}>
+      <div className="flex items-center gap-2">
+        <select
+          className="field-input"
+          value={hora}
+          required={required}
+          aria-label={`${label} — hora`}
+          onChange={(e) => actualizar(e.target.value, minuto || "00")}
+        >
+          <option value="">HH</option>
+          {HORAS.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <span className="text-slate-500">:</span>
+        <select
+          className="field-input"
+          value={minuto}
+          required={required}
+          aria-label={`${label} — minutos`}
+          onChange={(e) => actualizar(hora || "00", e.target.value)}
+        >
+          <option value="">MM</option>
+          {MINUTOS.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      </div>
+    </FieldWrap>
+  );
+}
+
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   required?: boolean;

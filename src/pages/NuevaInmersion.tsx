@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
-import { TextField, SelectField, TextareaField } from "../components/FormField";
+import { TextField, SelectField, TextareaField, TimeField } from "../components/FormField";
 import { mensajeDeError } from "../lib/errores";
 import { minutesBetween, todayISO, parseDecimal } from "../lib/format";
 import type { Tables } from "../lib/types";
@@ -141,6 +141,18 @@ export function NuevaInmersion() {
       );
       return;
     }
+    if (!form.id_buzo_emergencia) {
+      setError("Debes seleccionar el buzo de emergencia.");
+      return;
+    }
+    if (form.id_buzo_emergencia === form.id_buzo) {
+      setError("El buzo de emergencia no puede ser el mismo buzo.");
+      return;
+    }
+    if (!form.id_supervisor) {
+      setError("Debes seleccionar el supervisor.");
+      return;
+    }
     if (!form.id_cliente) {
       setError("Debes seleccionar un cliente para poder elegir su centro de costo.");
       return;
@@ -157,8 +169,48 @@ export function NuevaInmersion() {
       setError("Debes indicar la embarcación.");
       return;
     }
-    if (form.id_buzo_emergencia && form.id_buzo_emergencia === form.id_buzo) {
-      setError("El buzo de emergencia no puede ser el mismo buzo.");
+    if (!form.ubicacion.trim()) {
+      setError("Debes indicar la ubicación.");
+      return;
+    }
+    if (!form.profundidad_maxima.trim()) {
+      setError("Debes indicar la profundidad máxima.");
+      return;
+    }
+    if (!form.hora_dejo_superficie) {
+      setError("Debes indicar la hora en que dejó la superficie.");
+      return;
+    }
+    if (!form.hora_llego_fondo) {
+      setError("Debes indicar la hora en que llegó al fondo.");
+      return;
+    }
+    if (!form.hora_dejo_fondo) {
+      setError("Debes indicar la hora en que dejó el fondo.");
+      return;
+    }
+    if (!form.hora_llego_superficie) {
+      setError("Debes indicar la hora en que llegó a superficie.");
+      return;
+    }
+    if (!form.temperatura_agua.trim()) {
+      setError("Debes indicar la temperatura del agua.");
+      return;
+    }
+    if (!form.estado_mar) {
+      setError("Debes seleccionar el estado del mar.");
+      return;
+    }
+    if (!form.id_equipo) {
+      setError("Debes seleccionar el equipo utilizado.");
+      return;
+    }
+    if (!form.id_navy) {
+      setError("Debes seleccionar la tabulación de la Tabla US Navy.");
+      return;
+    }
+    if (!form.faena_realizada.trim()) {
+      setError("Debes describir la faena realizada.");
       return;
     }
 
@@ -245,6 +297,7 @@ export function NuevaInmersion() {
           />
           <SelectField
             label="Buzo de emergencia"
+            required
             value={form.id_buzo_emergencia}
             onChange={(e) => update("id_buzo_emergencia", e.target.value)}
             options={buzos
@@ -253,12 +306,14 @@ export function NuevaInmersion() {
           />
           <SelectField
             label="Supervisor"
+            required
             value={form.id_supervisor}
             onChange={(e) => update("id_supervisor", e.target.value)}
             options={supervisores.map((s) => ({ value: s.id_supervisor, label: s.nombre_super }))}
           />
           <SelectField
             label="Cliente"
+            required
             value={form.id_cliente}
             onChange={(e) => {
               update("id_cliente", e.target.value);
@@ -284,6 +339,7 @@ export function NuevaInmersion() {
           />
           <TextField
             label="Ubicación"
+            required
             value={form.ubicacion}
             onChange={(e) => update("ubicacion", e.target.value)}
             placeholder="Ej: Muelle Puerto Varas"
@@ -295,33 +351,34 @@ export function NuevaInmersion() {
             label="Profundidad máxima (mts)"
             type="text"
             inputMode="decimal"
+            required
             placeholder="Ej: 24,4 o 24.4"
             value={form.profundidad_maxima}
             onChange={(e) => update("profundidad_maxima", e.target.value)}
           />
-          <TextField
+          <TimeField
             label="Dejó superficie (hora)"
-            type="time"
+            required
             value={form.hora_dejo_superficie}
-            onChange={(e) => update("hora_dejo_superficie", e.target.value)}
+            onChange={(v) => update("hora_dejo_superficie", v)}
           />
-          <TextField
+          <TimeField
             label="Llegó fondo (hora)"
-            type="time"
+            required
             value={form.hora_llego_fondo}
-            onChange={(e) => update("hora_llego_fondo", e.target.value)}
+            onChange={(v) => update("hora_llego_fondo", v)}
           />
-          <TextField
+          <TimeField
             label="Dejó fondo (hora)"
-            type="time"
+            required
             value={form.hora_dejo_fondo}
-            onChange={(e) => update("hora_dejo_fondo", e.target.value)}
+            onChange={(v) => update("hora_dejo_fondo", v)}
           />
-          <TextField
+          <TimeField
             label="Llegó superficie (hora)"
-            type="time"
+            required
             value={form.hora_llego_superficie}
-            onChange={(e) => update("hora_llego_superficie", e.target.value)}
+            onChange={(v) => update("hora_llego_superficie", v)}
           />
         </Section>
 
@@ -353,12 +410,14 @@ export function NuevaInmersion() {
             label="Temperatura del agua (°C)"
             type="text"
             inputMode="decimal"
+            required
             placeholder="Ej: 12,5 o 12.5"
             value={form.temperatura_agua}
             onChange={(e) => update("temperatura_agua", e.target.value)}
           />
           <SelectField
             label="Estado del mar"
+            required
             value={form.estado_mar}
             onChange={(e) => update("estado_mar", e.target.value)}
             options={ESTADOS_MAR.map((v) => ({ value: v, label: v }))}
@@ -368,6 +427,7 @@ export function NuevaInmersion() {
         <Section title="Equipo">
           <SelectField
             label="Equipo utilizado"
+            required
             value={form.id_equipo}
             onChange={(e) => update("id_equipo", e.target.value)}
             options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
@@ -378,6 +438,7 @@ export function NuevaInmersion() {
           <div>
             <SelectField
               label="Tabulación Tabla US Navy"
+              required
               value={form.id_navy}
               onChange={(e) => update("id_navy", e.target.value)}
               placeholder={
@@ -394,6 +455,7 @@ export function NuevaInmersion() {
           <TextareaField
             label="Faena realizada"
             rows={3}
+            required
             value={form.faena_realizada}
             onChange={(e) => update("faena_realizada", e.target.value)}
           />
