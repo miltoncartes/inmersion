@@ -78,6 +78,7 @@ export const supervisorSchema = z.object({
     .optional()
     .nullable(),
   fecha_vencimiento_matricula: z.string().optional().nullable(),
+  habilitado: z.boolean(),
 });
 export type SupervisorForm = z.infer<typeof supervisorSchema>;
 

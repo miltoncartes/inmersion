@@ -6,7 +6,7 @@ import { mensajeDeError } from "../../lib/errores";
 import { formatRut, formatDate } from "../../lib/format";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Modal } from "../../components/Modal";
-import { TextField } from "../../components/FormField";
+import { TextField, SelectField } from "../../components/FormField";
 import { Badge } from "../../components/Badge";
 import type { Tables } from "../../lib/types";
 
@@ -15,6 +15,9 @@ const empty: SupervisorForm = {
   nombre_super: "",
   email: "",
   fecha_vencimiento_matricula: "",
+  // Todo supervisor nuevo nace deshabilitado: un admin debe habilitarlo para
+  // que pueda crear su cuenta e ingresar al sistema.
+  habilitado: false,
 };
 
 function estadoVencimiento(fecha: string | null): "activo" | "por_vencer" | "vencido" | null {
@@ -44,6 +47,7 @@ export function Supervisores() {
       nombre_super: row.nombre_super,
       email: row.email ?? "",
       fecha_vencimiento_matricula: row.fecha_vencimiento_matricula ?? "",
+      habilitado: row.habilitado,
     });
     setErrors({});
     setModal(row);
@@ -55,6 +59,13 @@ export function Supervisores() {
       const fieldErrors: Record<string, string> = {};
       parsed.error.issues.forEach((i) => (fieldErrors[i.path[0] as string] = i.message));
       setErrors(fieldErrors);
+      return;
+    }
+    // Sin correo el supervisor no puede crear su cuenta, así que no tiene sentido habilitarlo.
+    if (parsed.data.habilitado && !parsed.data.email?.trim()) {
+      setErrors({
+        email: "Para habilitar el acceso debes registrar el correo con el que el supervisor creará su cuenta.",
+      });
       return;
     }
     setSaving(true);
@@ -177,12 +188,26 @@ export function Supervisores() {
               placeholder="supervisor@correo.cl"
               error={errors.email}
             />
+            <p className="-mt-2 text-xs text-slate-500">
+              Es el correo con el que el supervisor creará su cuenta. Solo podrá registrarse cuando lo habilites.
+            </p>
             <TextField
               label="Vencimiento de matrícula"
               type="date"
               value={form.fecha_vencimiento_matricula ?? ""}
               onChange={(e) => setForm({ ...form, fecha_vencimiento_matricula: e.target.value })}
               error={errors.fecha_vencimiento_matricula}
+            />
+            <SelectField
+              label="Acceso al sistema"
+              required
+              value={form.habilitado ? "si" : "no"}
+              onChange={(e) => setForm({ ...form, habilitado: e.target.value === "si" })}
+              sinOpcionVacia
+              options={[
+                { value: "no", label: "Sin acceso — no puede crear cuenta" },
+                { value: "si", label: "Habilitado — puede crear su cuenta" },
+              ]}
             />
             {errors._global && <p className="field-error">{errors._global}</p>}
             <button className="btn-primary w-full" onClick={handleSubmit} disabled={saving}>

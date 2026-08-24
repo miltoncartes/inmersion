@@ -98,13 +98,13 @@ export function Login() {
 
       if (estado === "no_registrado") {
         setError(
-          "Este correo no está registrado como buzo en el sistema. Pide a un administrador o supervisor que te cargue en el mantenedor de buzos con este correo."
+          "Este correo no está registrado como buzo ni como supervisor en el sistema. Pide a un administrador que te cargue con este correo en el mantenedor correspondiente."
         );
         return;
       }
       if (estado === "no_habilitado") {
         setError(
-          "Tu ficha de buzo existe pero aún no está habilitada. Un administrador o supervisor debe habilitarte antes de que puedas crear tu cuenta."
+          "Tu ficha existe pero aún no está habilitada. Un administrador debe habilitarte antes de que puedas crear tu cuenta."
         );
         return;
       }
@@ -229,8 +229,8 @@ export function Login() {
 
         {mode === "signup" && (
           <p className="mt-4 text-center text-xs text-slate-500">
-            Solo los buzos cargados y habilitados en el mantenedor pueden crear una cuenta, usando el correo registrado
-            por el administrador.
+            Solo los buzos o supervisores cargados y habilitados en el mantenedor pueden crear una cuenta, usando el
+            correo registrado por el administrador.
           </p>
         )}
       </div>
@@ -249,7 +249,7 @@ function traducirError(msg: string): string {
   if (msg.includes("Email not confirmed"))
     return "Tu correo aún no está confirmado. Revisa tu bandeja de entrada.";
   if (msg.includes("Database error saving new user"))
-    return "No se pudo crear la cuenta: tu correo no está habilitado en el mantenedor de buzos.";
+    return "No se pudo crear la cuenta: tu correo no está habilitado en el mantenedor de buzos o supervisores.";
   if (msg.includes("rate limit") || msg.includes("Too many"))
     return "Demasiados intentos seguidos. Espera unos minutos e inténtalo de nuevo.";
   return msg;

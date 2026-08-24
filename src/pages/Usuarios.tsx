@@ -13,6 +13,7 @@ export function Usuarios() {
   const { perfil } = useAuth();
   const { rows, loading, update, reload } = useCrud("usuarios_app", "nombre");
   const [buzos, setBuzos] = useState<Tables<"buzo">[]>([]);
+  const [supervisores, setSupervisores] = useState<Tables<"supervisor">[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,6 +22,11 @@ export function Usuarios() {
       .select("*")
       .order("nombre_buzo")
       .then(({ data }) => setBuzos(data ?? []));
+    supabase
+      .from("supervisor")
+      .select("*")
+      .order("nombre_super")
+      .then(({ data }) => setSupervisores(data ?? []));
   }, []);
 
   async function cambiarRol(row: Tables<"usuarios_app">, rol: UserRole) {
@@ -32,6 +38,12 @@ export function Usuarios() {
   async function cambiarBuzo(row: Tables<"usuarios_app">, id_buzo: string) {
     setSavingId(row.id);
     await update({ id: row.id }, { id_buzo: id_buzo || null });
+    setSavingId(null);
+  }
+
+  async function cambiarSupervisor(row: Tables<"usuarios_app">, id_supervisor: string) {
+    setSavingId(row.id);
+    await update({ id: row.id }, { id_supervisor: id_supervisor || null });
     setSavingId(null);
   }
 
@@ -81,25 +93,44 @@ export function Usuarios() {
       ),
     },
     {
-      header: "Ficha de buzo",
-      cell: (r) =>
-        r.rol === "buzo" ? (
-          <select
-            className="field-input py-1.5 text-xs"
-            value={r.id_buzo ?? ""}
-            disabled={savingId === r.id}
-            onChange={(e) => cambiarBuzo(r, e.target.value)}
-          >
-            <option value="">Sin ligar</option>
-            {buzos.map((b) => (
-              <option key={b.id_buzo} value={b.id_buzo}>
-                {b.nombre_buzo} · {b.rut_buzo}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="text-slate-500">—</span>
-        ),
+      header: "Ficha",
+      cell: (r) => {
+        if (r.rol === "buzo") {
+          return (
+            <select
+              className="field-input py-1.5 text-xs"
+              value={r.id_buzo ?? ""}
+              disabled={savingId === r.id}
+              onChange={(e) => cambiarBuzo(r, e.target.value)}
+            >
+              <option value="">Sin ligar</option>
+              {buzos.map((b) => (
+                <option key={b.id_buzo} value={b.id_buzo}>
+                  {b.nombre_buzo} · {b.rut_buzo}
+                </option>
+              ))}
+            </select>
+          );
+        }
+        if (r.rol === "supervisor") {
+          return (
+            <select
+              className="field-input py-1.5 text-xs"
+              value={r.id_supervisor ?? ""}
+              disabled={savingId === r.id}
+              onChange={(e) => cambiarSupervisor(r, e.target.value)}
+            >
+              <option value="">Sin ligar</option>
+              {supervisores.map((s) => (
+                <option key={s.id_supervisor} value={s.id_supervisor}>
+                  {s.nombre_super} · {s.rut_super}
+                </option>
+              ))}
+            </select>
+          );
+        }
+        return <span className="text-slate-500">—</span>;
+      },
     },
     { header: "Estado", cell: (r) => <Badge tone={r.activo ? "activo" : "inactivo"}>{r.activo ? "activo" : "inactivo"}</Badge> },
     {
@@ -139,8 +170,9 @@ export function Usuarios() {
         <p className="eyebrow">Administración</p>
         <h1 className="text-xl font-semibold text-slate-50">Usuarios</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Asigna roles a las cuentas creadas. Las cuentas nuevas quedan como <strong>buzo</strong> por defecto. A un usuario con
-          rol buzo hay que ligarle su ficha para que vea sus propias inmersiones.
+          Cuando alguien crea su cuenta con un correo habilitado en el mantenedor de Buzos o Supervisores, aparece aquí
+          automáticamente con el rol y la ficha correspondiente ya ligados. Las cuentas con un correo no registrado quedan
+          como <strong>buzo</strong> inactivo por defecto — actívalas y asígnales rol y ficha manualmente.
         </p>
       </div>
 

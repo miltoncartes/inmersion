@@ -428,6 +428,7 @@ export type Database = {
           created_at: string
           email: string | null
           fecha_vencimiento_matricula: string | null
+          habilitado: boolean
           id_supervisor: string
           nombre_super: string
           rut_super: string
@@ -437,6 +438,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           fecha_vencimiento_matricula?: string | null
+          habilitado?: boolean
           id_supervisor?: string
           nombre_super: string
           rut_super: string
@@ -446,6 +448,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           fecha_vencimiento_matricula?: string | null
+          habilitado?: boolean
           id_supervisor?: string
           nombre_super?: string
           rut_super?: string
@@ -531,6 +534,7 @@ export type Database = {
           created_at: string
           id: string
           id_buzo: string | null
+          id_supervisor: string | null
           nombre: string
           rol: Database["public"]["Enums"]["user_role"]
           updated_at: string
@@ -540,6 +544,7 @@ export type Database = {
           created_at?: string
           id: string
           id_buzo?: string | null
+          id_supervisor?: string | null
           nombre: string
           rol?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
@@ -549,6 +554,7 @@ export type Database = {
           created_at?: string
           id?: string
           id_buzo?: string | null
+          id_supervisor?: string | null
           nombre?: string
           rol?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
@@ -560,6 +566,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "buzo"
             referencedColumns: ["id_buzo"]
+          },
+          {
+            foreignKeyName: "usuarios_app_id_supervisor_fkey"
+            columns: ["id_supervisor"]
+            isOneToOne: false
+            referencedRelation: "supervisor"
+            referencedColumns: ["id_supervisor"]
           },
         ]
       }
