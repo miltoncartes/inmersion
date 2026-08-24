@@ -22,7 +22,7 @@ type Detalle = Tables<"perfil_inmersion"> & {
 export function DetalleInmersion() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { esAdmin, esEditor } = useAuth();
+  const { esAdmin } = useAuth();
   const [data, setData] = useState<Detalle | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -101,9 +101,9 @@ export function DetalleInmersion() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div id="print-header" className="print-only mb-6 hidden text-center">
-        <Logo size={56} className="mx-auto mb-3" />
-        <h1 className="text-3xl font-bold">Inmersión</h1>
+      <div id="print-header" className="print-only mb-4 hidden text-center">
+        <Logo size={40} className="mx-auto mb-2" />
+        <h1 className="text-2xl font-bold">Inmersión</h1>
         <p className="mt-1 text-slate-500">{formatDate(data.fecha_inmersion)}</p>
       </div>
 
@@ -117,9 +117,16 @@ export function DetalleInmersion() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="btn-secondary">
-            Imprimir / Guardar PDF
+            Imprimir
           </button>
-          {(esEditor || pendiente) && (
+          <button onClick={() => window.print()} className="btn-secondary">
+            Guardar PDF
+          </button>
+          {/* Una inmersión validada solo puede seguir editándola un admin: la base
+              de datos rechaza con error cualquier cambio de un no-admin sobre una
+              inmersión ya validada (protect_validacion_fields), así que el botón
+              no debe mostrarse a supervisores ni buzos en ese caso. */}
+          {(esAdmin || pendiente) && (
             <Link to={`/inmersiones/${id}/editar`} className="btn-secondary">
               Editar
             </Link>
@@ -132,7 +139,7 @@ export function DetalleInmersion() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 print:space-y-2">
         <InfoCard title="Identificación">
           <Row label="Buzo" value={`${data.buzo?.nombre_buzo ?? "—"}${data.buzo ? ` · ${data.buzo.rut_buzo}` : ""}`} />
           <Row label="Buzo de emergencia" value={data.buzo_emergencia?.nombre_buzo ?? "—"} />
@@ -141,6 +148,7 @@ export function DetalleInmersion() {
           <Row label="Centro de costo" value={data.centro_cultivo?.nombre_centro ?? "—"} />
           <Row label="Embarcación" value={data.embarcacion ?? "—"} />
           <Row label="Ubicación" value={data.ubicacion ?? "—"} />
+          <Row label="Equipo utilizado" value={data.equipo?.nombre_ordenador ?? "—"} />
         </InfoCard>
 
         <InfoCard title="Perfil de la inmersión">
@@ -158,21 +166,20 @@ export function DetalleInmersion() {
           <Row label="Tabulación Tabla US Navy" value={data.tabulacion?.composicion ?? "—"} />
         </InfoCard>
 
-        <InfoCard title="Condiciones y equipo">
+        <InfoCard title="Condiciones">
           <Row label="Temperatura del agua" value={data.temperatura_agua != null ? `${data.temperatura_agua} °C` : "—"} />
           <Row label="Estado del mar" value={data.estado_mar ?? "—"} />
-          <Row label="Equipo utilizado" value={data.equipo?.nombre_ordenador ?? "—"} />
         </InfoCard>
 
         {data.faena_realizada && (
           <InfoCard title="Faena realizada">
-            <p className="text-sm text-slate-200">{data.faena_realizada}</p>
+            <p className="text-sm text-slate-200 print:col-span-2 print:text-xs print:text-black">{data.faena_realizada}</p>
           </InfoCard>
         )}
 
         <InfoCard title="Validación">
-          {esAdmin ? (
-            <div className="space-y-3">
+          {esAdmin && (
+            <div className="no-print space-y-3">
               <div>
                 <label className="field-label">Observación</label>
                 <textarea
@@ -199,15 +206,22 @@ export function DetalleInmersion() {
                 </p>
               )}
             </div>
-          ) : (
-            <>
-              <Row label="Estado" value={data.estado_validacion === "validada" ? "Validada" : "Pendiente de revisión"} />
-              {data.observacion_admin && (
-                <div className="mt-2 rounded-lg bg-navy-900/60 p-3 text-sm text-slate-200">{data.observacion_admin}</div>
-              )}
-            </>
           )}
+          {/* Vista de solo lectura: siempre visible al imprimir, y para cualquier
+              usuario sin permisos de validación en pantalla. */}
+          <div className={esAdmin ? "print-only hidden print:col-span-2" : "print:col-span-2"}>
+            <Row label="Estado" value={data.estado_validacion === "validada" ? "Validada" : "Pendiente de revisión"} />
+            {data.observacion_admin && (
+              <div className="mt-2 rounded-lg bg-navy-900/60 p-3 text-sm text-slate-200 print:col-span-2 print:mt-1 print:bg-transparent print:p-0 print:text-xs print:text-black">
+                {data.observacion_admin}
+              </div>
+            )}
+          </div>
         </InfoCard>
+      </div>
+
+      <div id="print-footer" className="print-only hidden text-center">
+        <p className="text-xs text-slate-500">MDIBUCEO, Puerto Varas</p>
       </div>
     </div>
   );
@@ -215,16 +229,18 @@ export function DetalleInmersion() {
 
 function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="card space-y-3 p-5 print:border-0 print:bg-transparent print:shadow-none">
-      <p className="eyebrow border-b border-navy-700/70 pb-3 print:text-black">{title}</p>
-      <div className="space-y-2.5">{children}</div>
+    <div className="card space-y-3 p-5 print:space-y-1 print:border-0 print:bg-transparent print:p-0 print:shadow-none">
+      <p className="eyebrow border-b border-navy-700/70 pb-3 print:pb-1 print:text-black">{title}</p>
+      <div className="space-y-2.5 print:grid print:grid-cols-2 print:gap-x-6 print:gap-y-0.5 print:space-y-0">
+        {children}
+      </div>
     </div>
   );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 text-sm">
+    <div className="flex items-center justify-between gap-4 text-sm print:text-xs">
       <span className="text-slate-400 print:text-slate-600">{label}</span>
       <span className="text-right font-medium text-slate-100 print:text-black">{value}</span>
     </div>
