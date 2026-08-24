@@ -430,13 +430,15 @@ export function NuevaInmersion() {
         </Section>
 
         <Section title="Faena realizada">
-          <TextareaField
-            label="Faena realizada"
-            rows={3}
-            required
-            value={form.faena_realizada}
-            onChange={(e) => update("faena_realizada", e.target.value)}
-          />
+          <div className="sm:col-span-2">
+            <TextareaField
+              label="Faena realizada"
+              rows={3}
+              required
+              value={form.faena_realizada}
+              onChange={(e) => update("faena_realizada", e.target.value)}
+            />
+          </div>
         </Section>
 
         {error && <p className="field-error">{error}</p>}
