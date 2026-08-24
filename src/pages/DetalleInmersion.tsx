@@ -161,7 +161,6 @@ export function DetalleInmersion() {
           <Row label="Cliente" value={data.cliente?.nombre_cliente ?? "—"} />
           <Row label="Centro de costo" value={data.centro_cultivo?.nombre_centro ?? "—"} />
           <Row label="Embarcación" value={data.embarcacion ?? "—"} />
-          <Row label="Ubicación" value={data.ubicacion ?? "—"} />
           <Row label="Equipo utilizado" value={data.equipo?.matricula_equipo ?? "—"} />
         </InfoCard>
 
@@ -175,9 +174,9 @@ export function DetalleInmersion() {
 
         <InfoCard title="Tiempos totales">
           <Row label="Tiempo total fondo" value={data.tiempos?.tiempo_total_fondo != null ? `${data.tiempos.tiempo_total_fondo} min` : "—"} />
-          <Row label="Tiempo total descompresión" value={data.tiempos?.tiempo_total_descompresion != null ? `${data.tiempos.tiempo_total_descompresion} min` : "—"} />
           <Row label="Tiempo total buceo" value={data.tiempos?.tiempo_total_buceo != null ? `${data.tiempos.tiempo_total_buceo} min` : "—"} />
           <Row label="Tabulación Tabla US Navy" value={data.tabulacion?.composicion ?? "—"} />
+          <Row label="Tiempo total descompresión" value={data.tiempos?.tiempo_total_descompresion != null ? `${data.tiempos.tiempo_total_descompresion} min` : "—"} />
         </InfoCard>
 
         <InfoCard title="Condiciones">

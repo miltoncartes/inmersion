@@ -20,7 +20,7 @@ export const buzoSchema = z.object({
   vencimiento_hipervarico: z.string().optional().nullable(),
   estado: z.enum(["activo", "inactivo", "suspendido"]),
   habilitado: z.boolean(),
-  id_equipo_asignado: z.string().optional().nullable(),
+  ordenador_asignado: z.string().optional().nullable(),
 });
 export type BuzoForm = z.infer<typeof buzoSchema>;
 
@@ -53,14 +53,14 @@ export const mascaraSchema = z.object({
 export type MascaraForm = z.infer<typeof mascaraSchema>;
 
 export const botellaAuxSchema = z.object({
-  nombre_botella_aux: z.string().min(1, "Nombre requerido"),
+  nombre_botella_aux: z.string().min(1, "Número de serie de botella requerido"),
   fecha_venc_aux: z.string().optional().nullable(),
   observacion: z.string().optional().nullable(),
 });
 export type BotellaAuxForm = z.infer<typeof botellaAuxSchema>;
 
 export const botellaEmerSchema = z.object({
-  nombre_botella_emer: z.string().min(1, "Nombre requerido"),
+  nombre_botella_emer: z.string().min(1, "Número de serie de botella requerido"),
   fecha_venc_emer: z.string().optional().nullable(),
   observacion: z.string().optional().nullable(),
 });

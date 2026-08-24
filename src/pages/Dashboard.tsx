@@ -10,7 +10,6 @@ import { formatDate } from "../lib/format";
 type Recent = {
   id_inmersion: string;
   fecha_inmersion: string;
-  ubicacion: string | null;
   buzo: { nombre_buzo: string } | null;
   cliente: { nombre_cliente: string } | null;
   tiempos: { profundidad_maxima: number | null } | { profundidad_maxima: number | null }[] | null;
@@ -63,7 +62,7 @@ export function Dashboard() {
           ? supabase
               .from("perfil_inmersion")
               .select(
-                "id_inmersion, fecha_inmersion, ubicacion, buzo:buzo!perfil_inmersion_id_buzo_fkey(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima)"
+                "id_inmersion, fecha_inmersion, buzo:buzo!perfil_inmersion_id_buzo_fkey(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima)"
               )
               .order("fecha_inmersion", { ascending: false })
               .limit(5)
@@ -137,7 +136,6 @@ export function Dashboard() {
                       <th className="eyebrow px-4 py-3 text-left font-medium">Nombre buzo</th>
                       <th className="eyebrow px-4 py-3 text-left font-medium">Fecha</th>
                       <th className="eyebrow px-4 py-3 text-left font-medium">Cliente</th>
-                      <th className="eyebrow px-4 py-3 text-left font-medium">Ubicación</th>
                       <th className="eyebrow px-4 py-3 text-right font-medium">Prof. máx.</th>
                     </tr>
                   </thead>
@@ -153,7 +151,6 @@ export function Dashboard() {
                           <td className="px-4 py-3 text-slate-200">{r.buzo?.nombre_buzo ?? "—"}</td>
                           <td className="px-4 py-3 text-slate-400">{formatDate(r.fecha_inmersion)}</td>
                           <td className="px-4 py-3 text-slate-400">{r.cliente?.nombre_cliente ?? "—"}</td>
-                          <td className="px-4 py-3 text-slate-400">{r.ubicacion ?? "—"}</td>
                           <td className="px-4 py-3 text-right text-slate-200">{prof != null ? `${prof} m` : "—"}</td>
                         </tr>
                       );

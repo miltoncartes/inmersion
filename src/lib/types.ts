@@ -76,6 +76,7 @@ export type Database = {
           id_buzo: string
           id_equipo_asignado: string | null
           nombre_buzo: string
+          ordenador_asignado: string | null
           rut_buzo: string
           updated_at: string
           vencimiento_hipervarico: string | null
@@ -89,6 +90,7 @@ export type Database = {
           id_buzo?: string
           id_equipo_asignado?: string | null
           nombre_buzo: string
+          ordenador_asignado?: string | null
           rut_buzo: string
           updated_at?: string
           vencimiento_hipervarico?: string | null
@@ -102,6 +104,7 @@ export type Database = {
           id_buzo?: string
           id_equipo_asignado?: string | null
           nombre_buzo?: string
+          ordenador_asignado?: string | null
           rut_buzo?: string
           updated_at?: string
           vencimiento_hipervarico?: string | null

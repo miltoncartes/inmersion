@@ -63,7 +63,7 @@ export function BotellasAux() {
   }
 
   const columns: Column<Tables<"botellas_aux">>[] = [
-    { header: "Nombre", cell: (r) => r.nombre_botella_aux },
+    { header: "N° de serie", cell: (r) => r.nombre_botella_aux },
     { header: "Vencimiento", cell: (r) => formatDate(r.fecha_venc_aux) },
     { header: "Observación", cell: (r) => r.observacion ?? "—" },
     {
@@ -113,11 +113,11 @@ export function BotellasAux() {
         <Modal title={modal === "nuevo" ? "Nueva botella auxiliar" : "Editar botella auxiliar"} onClose={() => setModal(null)}>
           <div className="space-y-4">
             <TextField
-              label="Nombre"
+              label="Número de serie de botella"
               required
               value={form.nombre_botella_aux}
               onChange={(e) => setForm({ ...form, nombre_botella_aux: e.target.value })}
-              placeholder="Ej: Botella Aux BA-014"
+              placeholder="Ej: BA-014"
               error={errors.nombre_botella_aux}
             />
             <TextField

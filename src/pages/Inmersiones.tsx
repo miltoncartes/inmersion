@@ -11,7 +11,6 @@ import type { EstadoValidacion } from "../lib/types";
 type Row = {
   id_inmersion: string;
   fecha_inmersion: string;
-  ubicacion: string | null;
   estado_validacion: EstadoValidacion;
   buzo: { nombre_buzo: string } | null;
   cliente: { nombre_cliente: string } | null;
@@ -30,7 +29,7 @@ export function Inmersiones() {
       const { data } = await supabase
         .from("perfil_inmersion")
         .select(
-          "id_inmersion, fecha_inmersion, ubicacion, estado_validacion, buzo:buzo!perfil_inmersion_id_buzo_fkey(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima, tiempo_total_buceo)"
+          "id_inmersion, fecha_inmersion, estado_validacion, buzo:buzo!perfil_inmersion_id_buzo_fkey(nombre_buzo), cliente:cliente!id_cliente(nombre_cliente), tiempos:tiempos_totales!id_inmersion(profundidad_maxima, tiempo_total_buceo)"
         )
         .order("fecha_inmersion", { ascending: false });
       setRows(
@@ -48,8 +47,7 @@ export function Inmersiones() {
     const s = q.toLowerCase();
     return (
       r.buzo?.nombre_buzo.toLowerCase().includes(s) ||
-      r.cliente?.nombre_cliente?.toLowerCase().includes(s) ||
-      r.ubicacion?.toLowerCase().includes(s)
+      r.cliente?.nombre_cliente?.toLowerCase().includes(s)
     );
   });
 
@@ -61,7 +59,6 @@ export function Inmersiones() {
     { header: "Fecha", cell: (r) => formatDate(r.fecha_inmersion) },
     { header: "Buzo", cell: (r) => r.buzo?.nombre_buzo ?? "—" },
     { header: "Cliente", cell: (r) => r.cliente?.nombre_cliente ?? "—" },
-    { header: "Ubicación", cell: (r) => r.ubicacion ?? "—" },
     { header: "Prof. máx.", cell: (r) => (r.tiempos?.profundidad_maxima != null ? `${r.tiempos.profundidad_maxima} m` : "—") },
     { header: "Buceo", cell: (r) => (r.tiempos?.tiempo_total_buceo != null ? `${r.tiempos.tiempo_total_buceo} min` : "—") },
     {
@@ -88,7 +85,7 @@ export function Inmersiones() {
       {rows.length > 0 && (
         <input
           className="field-input mb-4 max-w-sm"
-          placeholder="Buscar por buzo, cliente o ubicación…"
+          placeholder="Buscar por buzo o cliente…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../../lib/auth";
 import { useCrud } from "../../lib/useCrud";
 import { supabase } from "../../lib/supabaseClient";
@@ -22,21 +22,12 @@ const empty: BuzoForm = {
   // Todo buzo nuevo nace deshabilitado: un admin o supervisor debe habilitarlo
   // para que pueda crear su cuenta e ingresar al sistema.
   habilitado: false,
-  id_equipo_asignado: "",
+  ordenador_asignado: "",
 };
 
 export function Buzos() {
   const { esEditor, esAdmin } = useAuth();
   const { rows, loading, insert, update, remove } = useCrud("buzo", "nombre_buzo");
-  const [equipos, setEquipos] = useState<Tables<"equipos">[]>([]);
-
-  useEffect(() => {
-    supabase
-      .from("equipos")
-      .select("*")
-      .order("matricula_equipo")
-      .then(({ data }) => setEquipos(data ?? []));
-  }, []);
   const [modal, setModal] = useState<null | "nuevo" | Tables<"buzo">>(null);
   const [form, setForm] = useState<BuzoForm>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -56,7 +47,7 @@ export function Buzos() {
       vencimiento_hipervarico: row.vencimiento_hipervarico ?? "",
       estado: row.estado as BuzoForm["estado"],
       habilitado: row.habilitado,
-      id_equipo_asignado: row.id_equipo_asignado ?? "",
+      ordenador_asignado: row.ordenador_asignado ?? "",
     });
     setErrors({});
     setModal(row);
@@ -83,7 +74,7 @@ export function Buzos() {
       email: parsed.data.email?.trim() ? parsed.data.email.trim().toLowerCase() : null,
       clase_matricula: parsed.data.clase_matricula || null,
       vencimiento_hipervarico: parsed.data.vencimiento_hipervarico || null,
-      id_equipo_asignado: parsed.data.id_equipo_asignado || null,
+      ordenador_asignado: parsed.data.ordenador_asignado?.trim() || null,
     };
     const err =
       modal === "nuevo"
@@ -154,8 +145,8 @@ export function Buzos() {
       className: "whitespace-nowrap",
     },
     {
-      header: "Equipo asignado",
-      cell: (r) => equipos.find((e) => e.id_equipo === r.id_equipo_asignado)?.matricula_equipo ?? "—",
+      header: "Ordenador asignado",
+      cell: (r) => r.ordenador_asignado ?? "—",
       className: "whitespace-nowrap",
     },
     {
@@ -250,11 +241,11 @@ export function Buzos() {
               onChange={(e) => setForm({ ...form, estado: e.target.value as BuzoForm["estado"] })}
               options={ESTADOS.map((v) => ({ value: v, label: v }))}
             />
-            <SelectField
-              label="Equipo asignado"
-              value={form.id_equipo_asignado ?? ""}
-              onChange={(e) => setForm({ ...form, id_equipo_asignado: e.target.value })}
-              options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.matricula_equipo ?? "Sin matrícula" }))}
+            <TextField
+              label="Ordenador asignado"
+              value={form.ordenador_asignado ?? ""}
+              onChange={(e) => setForm({ ...form, ordenador_asignado: e.target.value })}
+              placeholder="Ej: Suunto D6i #04"
             />
             <SelectField
               label="Acceso al sistema"

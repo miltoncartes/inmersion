@@ -63,7 +63,7 @@ export function BotellasEmer() {
   }
 
   const columns: Column<Tables<"botellas_emer">>[] = [
-    { header: "Nombre", cell: (r) => r.nombre_botella_emer },
+    { header: "N° de serie", cell: (r) => r.nombre_botella_emer },
     { header: "Vencimiento", cell: (r) => formatDate(r.fecha_venc_emer) },
     { header: "Observación", cell: (r) => r.observacion ?? "—" },
     {
@@ -113,11 +113,11 @@ export function BotellasEmer() {
         <Modal title={modal === "nuevo" ? "Nueva botella de emergencia" : "Editar botella de emergencia"} onClose={() => setModal(null)}>
           <div className="space-y-4">
             <TextField
-              label="Nombre"
+              label="Número de serie de botella"
               required
               value={form.nombre_botella_emer}
               onChange={(e) => setForm({ ...form, nombre_botella_emer: e.target.value })}
-              placeholder="Ej: Botella Emer BE-007"
+              placeholder="Ej: BE-007"
               error={errors.nombre_botella_emer}
             />
             <TextField
