@@ -16,6 +16,23 @@
   textarea {
     color-scheme: dark;
   }
+  /* Chrome atenúa el texto de <input type="date"/"time"> mientras el campo
+     no tiene el foco, incluso con color-scheme: dark y un valor ya cargado.
+     Se ve como si el campo estuviera deshabilitado. Se fuerza el color de
+     cada segmento para que el texto se vea siempre con contraste normal. */
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="date"]::-webkit-datetime-edit-text,
+  input[type="date"]::-webkit-datetime-edit-day-field,
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-year-field,
+  input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="time"]::-webkit-datetime-edit-text,
+  input[type="time"]::-webkit-datetime-edit-hour-field,
+  input[type="time"]::-webkit-datetime-edit-minute-field,
+  input[type="time"]::-webkit-datetime-edit-ampm-field {
+    color: #f1f5f9;
+    opacity: 1;
+  }
 }
 
 @layer components {
