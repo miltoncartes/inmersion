@@ -183,7 +183,6 @@ export type Database = {
           id_equipo: string
           id_masc: string | null
           matricula_equipo: string | null
-          nombre_ordenador: string
           numero_serie_cargador_alta_presion: string | null
           numero_serie_consola_aire: string | null
           numero_serie_consola_comunicaciones: string | null
@@ -200,7 +199,6 @@ export type Database = {
           id_equipo?: string
           id_masc?: string | null
           matricula_equipo?: string | null
-          nombre_ordenador: string
           numero_serie_cargador_alta_presion?: string | null
           numero_serie_consola_aire?: string | null
           numero_serie_consola_comunicaciones?: string | null
@@ -217,7 +215,6 @@ export type Database = {
           id_equipo?: string
           id_masc?: string | null
           matricula_equipo?: string | null
-          nombre_ordenador?: string
           numero_serie_cargador_alta_presion?: string | null
           numero_serie_consola_aire?: string | null
           numero_serie_consola_comunicaciones?: string | null

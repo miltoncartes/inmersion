@@ -11,7 +11,8 @@ import { Badge } from "../../components/Badge";
 import type { Tables } from "../../lib/types";
 
 const empty: EquipoForm = {
-  nombre_ordenador: "",
+  matricula_equipo: "",
+  vencimiento_equipo: "",
   id_masc: "",
   id_botella_aux: "",
   id_botella_emer: "",
@@ -21,8 +22,6 @@ const empty: EquipoForm = {
   fecha_mantencion_consola_comunicaciones: "",
   numero_serie_cargador_alta_presion: "",
   fecha_mantencion_cargador_alta_presion: "",
-  matricula_equipo: "",
-  vencimiento_equipo: "",
 };
 
 function estadoVencimiento(fecha: string | null): "activo" | "por_vencer" | "vencido" | null {
@@ -35,9 +34,12 @@ function estadoVencimiento(fecha: string | null): "activo" | "por_vencer" | "ven
   return "activo";
 }
 
+const CLAVE_COLUMNAS = "mdibuceo_equipos_columnas";
+const COLUMNAS_POR_DEFECTO = ["vencimiento", "estado"];
+
 export function Equipos() {
   const { esEditor, esAdmin } = useAuth();
-  const { rows, loading, insert, update, remove } = useCrud("equipos", "nombre_ordenador");
+  const { rows, loading, insert, update, remove } = useCrud("equipos", "matricula_equipo");
   const [mascaras, setMascaras] = useState<Tables<"mascaras">[]>([]);
   const [botellasAux, setBotellasAux] = useState<Tables<"botellas_aux">[]>([]);
   const [botellasEmer, setBotellasEmer] = useState<Tables<"botellas_emer">[]>([]);
@@ -45,6 +47,15 @@ export function Equipos() {
   const [form, setForm] = useState<EquipoForm>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [columnasVisibles, setColumnasVisibles] = useState<string[]>(() => {
+    try {
+      const guardado = localStorage.getItem(CLAVE_COLUMNAS);
+      return guardado ? JSON.parse(guardado) : COLUMNAS_POR_DEFECTO;
+    } catch {
+      return COLUMNAS_POR_DEFECTO;
+    }
+  });
+  const [selectorAbierto, setSelectorAbierto] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -59,6 +70,14 @@ export function Equipos() {
     })();
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem(CLAVE_COLUMNAS, JSON.stringify(columnasVisibles));
+  }, [columnasVisibles]);
+
+  function alternarColumna(id: string) {
+    setColumnasVisibles((cols) => (cols.includes(id) ? cols.filter((c) => c !== id) : [...cols, id]));
+  }
+
   function openNuevo() {
     setForm(empty);
     setErrors({});
@@ -66,7 +85,8 @@ export function Equipos() {
   }
   function openEditar(row: Tables<"equipos">) {
     setForm({
-      nombre_ordenador: row.nombre_ordenador,
+      matricula_equipo: row.matricula_equipo ?? "",
+      vencimiento_equipo: row.vencimiento_equipo ?? "",
       id_masc: row.id_masc ?? "",
       id_botella_aux: row.id_botella_aux ?? "",
       id_botella_emer: row.id_botella_emer ?? "",
@@ -76,8 +96,6 @@ export function Equipos() {
       fecha_mantencion_consola_comunicaciones: row.fecha_mantencion_consola_comunicaciones ?? "",
       numero_serie_cargador_alta_presion: row.numero_serie_cargador_alta_presion ?? "",
       fecha_mantencion_cargador_alta_presion: row.fecha_mantencion_cargador_alta_presion ?? "",
-      matricula_equipo: row.matricula_equipo ?? "",
-      vencimiento_equipo: row.vencimiento_equipo ?? "",
     });
     setErrors({});
     setModal(row);
@@ -94,7 +112,8 @@ export function Equipos() {
     setSaving(true);
     const d = parsed.data;
     const payload = {
-      nombre_ordenador: d.nombre_ordenador,
+      matricula_equipo: d.matricula_equipo,
+      vencimiento_equipo: d.vencimiento_equipo,
       id_masc: d.id_masc || null,
       id_botella_aux: d.id_botella_aux || null,
       id_botella_emer: d.id_botella_emer || null,
@@ -104,8 +123,6 @@ export function Equipos() {
       fecha_mantencion_consola_comunicaciones: d.fecha_mantencion_consola_comunicaciones || null,
       numero_serie_cargador_alta_presion: d.numero_serie_cargador_alta_presion || null,
       fecha_mantencion_cargador_alta_presion: d.fecha_mantencion_cargador_alta_presion || null,
-      matricula_equipo: d.matricula_equipo || null,
-      vencimiento_equipo: d.vencimiento_equipo || null,
     };
     const err =
       modal === "nuevo"
@@ -117,22 +134,75 @@ export function Equipos() {
   }
 
   async function handleDelete(row: Tables<"equipos">) {
-    if (!confirm(`¿Eliminar el equipo ${row.nombre_ordenador}?`)) return;
+    if (!confirm(`¿Eliminar el equipo ${row.matricula_equipo ?? "sin matrícula"}?`)) return;
     const err = await remove({ id_equipo: row.id_equipo });
     if (err) alert("No se pudo eliminar: " + err);
   }
 
-  const columns: Column<Tables<"equipos">>[] = [
-    { header: "Ordenador", cell: (r) => r.nombre_ordenador },
-    { header: "Matrícula", cell: (r) => r.matricula_equipo ?? "—" },
-    { header: "Vencimiento", cell: (r) => formatDate(r.vencimiento_equipo) },
+  const columnasOpcionales: (Column<Tables<"equipos">> & { id: string })[] = [
     {
+      id: "vencimiento",
+      header: "Vencimiento",
+      cell: (r) => formatDate(r.vencimiento_equipo),
+    },
+    {
+      id: "estado",
       header: "Estado",
       cell: (r) => {
         const estado = estadoVencimiento(r.vencimiento_equipo);
         return estado ? <Badge tone={estado}>{estado.replace("_", " ")}</Badge> : <span className="text-slate-500">—</span>;
       },
     },
+    {
+      id: "mascara",
+      header: "Máscara",
+      cell: (r) => mascaras.find((m) => m.id_masc === r.id_masc)?.nombre_masc ?? "—",
+    },
+    {
+      id: "botella_aux",
+      header: "Botella banco auxiliar",
+      cell: (r) => botellasAux.find((b) => b.id_botella_aux === r.id_botella_aux)?.nombre_botella_aux ?? "—",
+    },
+    {
+      id: "botella_emer",
+      header: "Botella banco emergencia",
+      cell: (r) => botellasEmer.find((b) => b.id_botella_emer === r.id_botella_emer)?.nombre_botella_emer ?? "—",
+    },
+    {
+      id: "serie_consola_aire",
+      header: "N° serie consola de aire",
+      cell: (r) => r.numero_serie_consola_aire ?? "—",
+    },
+    {
+      id: "fecha_calibracion_consola_aire",
+      header: "Fecha calibración consola aire",
+      cell: (r) => formatDate(r.fecha_calibracion_consola_aire),
+    },
+    {
+      id: "serie_consola_comunicaciones",
+      header: "N° serie consola de comunicaciones",
+      cell: (r) => r.numero_serie_consola_comunicaciones ?? "—",
+    },
+    {
+      id: "fecha_mantencion_consola_comunicaciones",
+      header: "Fecha mantención consola comunicaciones",
+      cell: (r) => formatDate(r.fecha_mantencion_consola_comunicaciones),
+    },
+    {
+      id: "serie_cargador_alta_presion",
+      header: "N° serie cargador alta presión",
+      cell: (r) => r.numero_serie_cargador_alta_presion ?? "—",
+    },
+    {
+      id: "fecha_mantencion_cargador_alta_presion",
+      header: "Fecha mantención cargador alta presión",
+      cell: (r) => formatDate(r.fecha_mantencion_cargador_alta_presion),
+    },
+  ];
+
+  const columns: Column<Tables<"equipos">>[] = [
+    { header: "Matrícula", cell: (r) => r.matricula_equipo ?? "—" },
+    ...columnasOpcionales.filter((c) => columnasVisibles.includes(c.id)),
     {
       header: "",
       cell: (r) =>
@@ -165,6 +235,37 @@ export function Equipos() {
         )}
       </div>
 
+      <div className="mb-3 flex justify-end">
+        <div className="relative">
+          <button className="btn-secondary" onClick={() => setSelectorAbierto((v) => !v)}>
+            Columnas ({columnasVisibles.length})
+          </button>
+          {selectorAbierto && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setSelectorAbierto(false)} />
+              <div className="card absolute right-0 top-11 z-20 w-72 p-4">
+                <p className="eyebrow mb-2">Elige qué columnas mostrar</p>
+                <div className="max-h-72 space-y-1 overflow-y-auto">
+                  {columnasOpcionales.map((c) => (
+                    <label key={c.id} className="flex items-center gap-2 rounded px-1 py-1.5 text-sm text-slate-200 hover:bg-navy-800">
+                      <input
+                        type="checkbox"
+                        checked={columnasVisibles.includes(c.id)}
+                        onChange={() => alternarColumna(c.id)}
+                      />
+                      {c.header}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-2 border-t border-navy-700/70 pt-2 text-xs text-slate-500">
+                  La selección se recuerda la próxima vez que entres a este mantenedor.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       {loading ? (
         <p className="text-sm text-slate-400">Cargando…</p>
       ) : (
@@ -180,12 +281,20 @@ export function Equipos() {
         <Modal title={modal === "nuevo" ? "Nuevo equipo" : "Editar equipo"} onClose={() => setModal(null)}>
           <div className="space-y-4">
             <TextField
-              label="Nombre del ordenador"
+              label="Matrícula del equipo"
               required
-              value={form.nombre_ordenador}
-              onChange={(e) => setForm({ ...form, nombre_ordenador: e.target.value })}
-              placeholder="Ej: Ordenador Suunto 04"
-              error={errors.nombre_ordenador}
+              value={form.matricula_equipo}
+              onChange={(e) => setForm({ ...form, matricula_equipo: e.target.value })}
+              placeholder="Ej: EQ-2026-014"
+              error={errors.matricula_equipo}
+            />
+            <TextField
+              label="Vencimiento del equipo"
+              type="date"
+              required
+              value={form.vencimiento_equipo}
+              onChange={(e) => setForm({ ...form, vencimiento_equipo: e.target.value })}
+              error={errors.vencimiento_equipo}
             />
             <SelectField
               label="Máscara"
@@ -237,17 +346,6 @@ export function Equipos() {
               type="date"
               value={form.fecha_mantencion_cargador_alta_presion ?? ""}
               onChange={(e) => setForm({ ...form, fecha_mantencion_cargador_alta_presion: e.target.value })}
-            />
-            <TextField
-              label="Matrícula del equipo"
-              value={form.matricula_equipo ?? ""}
-              onChange={(e) => setForm({ ...form, matricula_equipo: e.target.value })}
-            />
-            <TextField
-              label="Vencimiento del equipo"
-              type="date"
-              value={form.vencimiento_equipo ?? ""}
-              onChange={(e) => setForm({ ...form, vencimiento_equipo: e.target.value })}
             />
             {errors._global && <p className="field-error">{errors._global}</p>}
             <button className="btn-primary w-full" onClick={handleSubmit} disabled={saving}>

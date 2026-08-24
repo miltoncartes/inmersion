@@ -6,6 +6,7 @@ import { formatDate } from "../lib/format";
 import { mensajeDeError } from "../lib/errores";
 import { Badge } from "../components/Badge";
 import { Logo } from "../components/Logo";
+import { Modal } from "../components/Modal";
 import type { Tables } from "../lib/types";
 
 type Detalle = Tables<"perfil_inmersion"> & {
@@ -26,6 +27,8 @@ export function DetalleInmersion() {
   const [data, setData] = useState<Detalle | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
   const [observacion, setObservacion] = useState("");
   const [validando, setValidando] = useState(false);
 
@@ -57,11 +60,16 @@ export function DetalleInmersion() {
   }, [id]);
 
   async function handleDelete() {
-    if (!id || !confirm("¿Eliminar esta inmersión? Esta acción no se puede deshacer.")) return;
+    if (!id) return;
     setDeleting(true);
+    setErrorEliminar(null);
     const { error } = await supabase.from("perfil_inmersion").delete().eq("id_inmersion", id);
     setDeleting(false);
-    if (!error) navigate("/inmersiones");
+    if (error) {
+      setErrorEliminar(mensajeDeError(error, "eliminar la inmersión"));
+      return;
+    }
+    navigate("/inmersiones");
   }
 
   async function handleValidar() {
@@ -132,8 +140,14 @@ export function DetalleInmersion() {
             </Link>
           )}
           {esAdmin && (
-            <button onClick={handleDelete} disabled={deleting} className="btn-secondary text-red-400 hover:border-red-400">
-              {deleting ? "Eliminando…" : "Eliminar"}
+            <button
+              onClick={() => {
+                setErrorEliminar(null);
+                setConfirmandoEliminar(true);
+              }}
+              className="btn-secondary text-red-400 hover:border-red-400"
+            >
+              Eliminar
             </button>
           )}
         </div>
@@ -148,7 +162,7 @@ export function DetalleInmersion() {
           <Row label="Centro de costo" value={data.centro_cultivo?.nombre_centro ?? "—"} />
           <Row label="Embarcación" value={data.embarcacion ?? "—"} />
           <Row label="Ubicación" value={data.ubicacion ?? "—"} />
-          <Row label="Equipo utilizado" value={data.equipo?.nombre_ordenador ?? "—"} />
+          <Row label="Equipo utilizado" value={data.equipo?.matricula_equipo ?? "—"} />
         </InfoCard>
 
         <InfoCard title="Perfil de la inmersión">
@@ -223,6 +237,34 @@ export function DetalleInmersion() {
       <div id="print-footer" className="print-only hidden text-center">
         <p className="text-xs text-slate-500">MDIBUCEO, Puerto Varas</p>
       </div>
+
+      {confirmandoEliminar && (
+        <Modal title="Eliminar inmersión" onClose={() => setConfirmandoEliminar(false)}>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-200">
+              ¿Estás seguro de que deseas eliminar este registro de inmersión
+              {data.estado_validacion === "validada" ? " (ya validada)" : ""}? Esta acción no se puede deshacer.
+            </p>
+            {errorEliminar && <p className="field-error">{errorEliminar}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                className="btn-secondary"
+                onClick={() => setConfirmandoEliminar(false)}
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-primary bg-red-500 hover:bg-red-400"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Eliminando…" : "Sí, eliminar"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

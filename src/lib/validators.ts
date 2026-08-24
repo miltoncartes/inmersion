@@ -31,7 +31,8 @@ export const tablaUsNavySchema = z.object({
 export type TablaUsNavyForm = z.infer<typeof tablaUsNavySchema>;
 
 export const equipoSchema = z.object({
-  nombre_ordenador: z.string().min(1, "Nombre del ordenador requerido"),
+  matricula_equipo: z.string().min(1, "Matrícula del equipo requerida"),
+  vencimiento_equipo: z.string().min(1, "Vencimiento del equipo requerido"),
   id_masc: z.string().optional().nullable(),
   id_botella_aux: z.string().optional().nullable(),
   id_botella_emer: z.string().optional().nullable(),
@@ -41,8 +42,6 @@ export const equipoSchema = z.object({
   fecha_mantencion_consola_comunicaciones: z.string().optional().nullable(),
   numero_serie_cargador_alta_presion: z.string().optional().nullable(),
   fecha_mantencion_cargador_alta_presion: z.string().optional().nullable(),
-  matricula_equipo: z.string().optional().nullable(),
-  vencimiento_equipo: z.string().optional().nullable(),
 });
 export type EquipoForm = z.infer<typeof equipoSchema>;
 

@@ -34,7 +34,7 @@ export function Buzos() {
     supabase
       .from("equipos")
       .select("*")
-      .order("nombre_ordenador")
+      .order("matricula_equipo")
       .then(({ data }) => setEquipos(data ?? []));
   }, []);
   const [modal, setModal] = useState<null | "nuevo" | Tables<"buzo">>(null);
@@ -154,8 +154,8 @@ export function Buzos() {
       className: "whitespace-nowrap",
     },
     {
-      header: "Ordenador asignado",
-      cell: (r) => equipos.find((e) => e.id_equipo === r.id_equipo_asignado)?.nombre_ordenador ?? "—",
+      header: "Equipo asignado",
+      cell: (r) => equipos.find((e) => e.id_equipo === r.id_equipo_asignado)?.matricula_equipo ?? "—",
       className: "whitespace-nowrap",
     },
     {
@@ -251,10 +251,10 @@ export function Buzos() {
               options={ESTADOS.map((v) => ({ value: v, label: v }))}
             />
             <SelectField
-              label="Ordenador asignado"
+              label="Equipo asignado"
               value={form.id_equipo_asignado ?? ""}
               onChange={(e) => setForm({ ...form, id_equipo_asignado: e.target.value })}
-              options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
+              options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.matricula_equipo ?? "Sin matrícula" }))}
             />
             <SelectField
               label="Acceso al sistema"

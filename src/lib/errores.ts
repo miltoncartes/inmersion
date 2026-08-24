@@ -38,7 +38,7 @@ const PORColumna: Record<string, string> = {
   id_buzo: "Debes seleccionar el buzo que realizó la inmersión.",
   id_centro_cultivo: "Debes seleccionar el centro de costo.",
   embarcacion: "Debes indicar la embarcación.",
-  nombre_ordenador: "Debes indicar el nombre del ordenador.",
+  matricula_equipo: "Debes indicar la matrícula del equipo.",
   composicion: "Debes indicar la composición.",
 };
 

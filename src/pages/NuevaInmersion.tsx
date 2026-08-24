@@ -52,7 +52,7 @@ export function NuevaInmersion() {
         supabase.from("buzo").select("*").eq("estado", "activo").order("nombre_buzo"),
         supabase.from("supervisor").select("*").order("nombre_super"),
         supabase.from("cliente").select("*").order("nombre_cliente"),
-        supabase.from("equipos").select("*").order("nombre_ordenador"),
+        supabase.from("equipos").select("*").order("matricula_equipo"),
         supabase.from("tabla_us_navy").select("*").order("composicion"),
       ]);
       setBuzos(b.data ?? []);
@@ -327,7 +327,7 @@ export function NuevaInmersion() {
             required
             value={form.id_equipo}
             onChange={(e) => update("id_equipo", e.target.value)}
-            options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
+            options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.matricula_equipo ?? "Sin matrícula" }))}
           />
         </Section>
 
