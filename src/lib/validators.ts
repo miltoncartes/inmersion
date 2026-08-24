@@ -106,7 +106,6 @@ export const inmersionSchema = z
     hora_llego_fondo: z.string().min(1, "Hora requerida"),
     hora_dejo_fondo: z.string().min(1, "Hora requerida"),
     hora_llego_superficie: z.string().min(1, "Hora requerida"),
-    ubicacion: z.string().min(1, "Ubicación requerida"),
     temperatura_agua: z.union([z.number(), z.nan()]),
     estado_mar: z.string().min(1, "Estado del mar requerido"),
     faena_realizada: z.string().min(1, "Faena realizada requerida"),

@@ -38,12 +38,10 @@ export function NuevaInmersion() {
     hora_llego_fondo: "",
     hora_dejo_fondo: "",
     hora_llego_superficie: "",
-    ubicacion: "",
     temperatura_agua: "",
     estado_mar: "",
     faena_realizada: "",
     profundidad_maxima: "",
-    tiempo_total_fondo: "",
     tiempo_total_descompresion: "",
     id_navy: "",
   });
@@ -88,12 +86,10 @@ export function NuevaInmersion() {
             hora_llego_fondo: perfil.hora_llego_fondo ?? "",
             hora_dejo_fondo: perfil.hora_dejo_fondo ?? "",
             hora_llego_superficie: perfil.hora_llego_superficie ?? "",
-            ubicacion: perfil.ubicacion ?? "",
             temperatura_agua: perfil.temperatura_agua?.toString() ?? "",
             estado_mar: perfil.estado_mar ?? "",
             faena_realizada: perfil.faena_realizada ?? "",
             profundidad_maxima: tiempos?.profundidad_maxima?.toString() ?? "",
-            tiempo_total_fondo: tiempos?.tiempo_total_fondo?.toString() ?? "",
             tiempo_total_descompresion: tiempos?.tiempo_total_descompresion?.toString() ?? "",
             id_navy: perfil.id_navy ?? "",
           });
@@ -120,13 +116,7 @@ export function NuevaInmersion() {
       .then(({ data }) => setCentros(data ?? []));
   }, [form.id_cliente]);
 
-  // Auto-sugiere el tiempo de fondo cuando cambian las horas de fondo.
-  useEffect(() => {
-    const mins = minutesBetween(form.hora_llego_fondo, form.hora_dejo_fondo);
-    if (mins !== null) update("tiempo_total_fondo", String(mins));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.hora_llego_fondo, form.hora_dejo_fondo]);
-
+  const tiempoTotalFondo = minutesBetween(form.hora_llego_fondo, form.hora_dejo_fondo);
   const tiempoTotalBuceo = minutesBetween(form.hora_dejo_superficie, form.hora_llego_superficie);
 
   async function handleSubmit(e: FormEvent) {
@@ -169,8 +159,8 @@ export function NuevaInmersion() {
       setError("Debes indicar la embarcación.");
       return;
     }
-    if (!form.ubicacion.trim()) {
-      setError("Debes indicar la ubicación.");
+    if (!form.id_equipo) {
+      setError("Debes seleccionar el equipo utilizado.");
       return;
     }
     if (!form.profundidad_maxima.trim()) {
@@ -193,20 +183,16 @@ export function NuevaInmersion() {
       setError("Debes indicar la hora en que llegó a superficie.");
       return;
     }
+    if (!form.id_navy) {
+      setError("Debes seleccionar la tabulación de la Tabla US Navy.");
+      return;
+    }
     if (!form.temperatura_agua.trim()) {
       setError("Debes indicar la temperatura del agua.");
       return;
     }
     if (!form.estado_mar) {
       setError("Debes seleccionar el estado del mar.");
-      return;
-    }
-    if (!form.id_equipo) {
-      setError("Debes seleccionar el equipo utilizado.");
-      return;
-    }
-    if (!form.id_navy) {
-      setError("Debes seleccionar la tabulación de la Tabla US Navy.");
       return;
     }
     if (!form.faena_realizada.trim()) {
@@ -230,7 +216,6 @@ export function NuevaInmersion() {
         hora_llego_fondo: form.hora_llego_fondo || null,
         hora_dejo_fondo: form.hora_dejo_fondo || null,
         hora_llego_superficie: form.hora_llego_superficie || null,
-        ubicacion: form.ubicacion || null,
         temperatura_agua: form.temperatura_agua ? parseDecimal(form.temperatura_agua) : null,
         estado_mar: form.estado_mar || null,
         faena_realizada: form.faena_realizada || null,
@@ -250,7 +235,7 @@ export function NuevaInmersion() {
       const tiemposPayload = {
         id_inmersion: inmersionId!,
         id_buzo: form.id_buzo,
-        tiempo_total_fondo: form.tiempo_total_fondo ? Number(form.tiempo_total_fondo) : null,
+        tiempo_total_fondo: tiempoTotalFondo,
         tiempo_total_descompresion: form.tiempo_total_descompresion
           ? Number(form.tiempo_total_descompresion)
           : null,
@@ -337,12 +322,12 @@ export function NuevaInmersion() {
             onChange={(e) => update("embarcacion", e.target.value)}
             placeholder="Ej: Lancha Puelche II"
           />
-          <TextField
-            label="Ubicación"
+          <SelectField
+            label="Equipo utilizado"
             required
-            value={form.ubicacion}
-            onChange={(e) => update("ubicacion", e.target.value)}
-            placeholder="Ej: Muelle Puerto Varas"
+            value={form.id_equipo}
+            onChange={(e) => update("id_equipo", e.target.value)}
+            options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
           />
         </Section>
 
@@ -387,13 +372,12 @@ export function NuevaInmersion() {
         </Section>
 
         <Section title="Tiempos totales">
-          <TextField
-            label="Tiempo total fondo (mins)"
-            type="number"
-            min={0}
-            value={form.tiempo_total_fondo}
-            onChange={(e) => update("tiempo_total_fondo", e.target.value)}
-          />
+          <div>
+            <p className="field-label">Tiempo total fondo (mins)</p>
+            <p className="field-input flex items-center bg-navy-900/30 text-slate-400">
+              {tiempoTotalFondo ?? "Se calcula desde las horas de fondo"}
+            </p>
+          </div>
           <TextField
             label="Tiempo total descompresión (mins)"
             type="number"
@@ -406,6 +390,23 @@ export function NuevaInmersion() {
             <p className="field-input flex items-center bg-navy-900/30 text-slate-400">
               {tiempoTotalBuceo ?? "Se calcula desde las horas de superficie"}
             </p>
+          </div>
+          <div>
+            <SelectField
+              label="Tabulación Tabla US Navy"
+              required
+              value={form.id_navy}
+              onChange={(e) => update("id_navy", e.target.value)}
+              placeholder={
+                tablaNavy.length === 0 ? "Sin composiciones cargadas" : "Selecciona..."
+              }
+              options={tablaNavy.map((n) => ({ value: n.id_navy, label: n.composicion }))}
+            />
+            {tablaNavy.length === 0 && (
+              <p className="mt-1 text-xs text-amber-400">
+                No hay composiciones cargadas en el mantenedor de Tabla US Navy.
+              </p>
+            )}
           </div>
         </Section>
 
@@ -428,34 +429,7 @@ export function NuevaInmersion() {
           />
         </Section>
 
-        <Section title="Equipo">
-          <SelectField
-            label="Equipo utilizado"
-            required
-            value={form.id_equipo}
-            onChange={(e) => update("id_equipo", e.target.value)}
-            options={equipos.map((eq) => ({ value: eq.id_equipo, label: eq.nombre_ordenador }))}
-          />
-        </Section>
-
-        <Section title="Tabulación y faena realizada">
-          <div>
-            <SelectField
-              label="Tabulación Tabla US Navy"
-              required
-              value={form.id_navy}
-              onChange={(e) => update("id_navy", e.target.value)}
-              placeholder={
-                tablaNavy.length === 0 ? "Sin composiciones cargadas" : "Selecciona..."
-              }
-              options={tablaNavy.map((n) => ({ value: n.id_navy, label: n.composicion }))}
-            />
-            {tablaNavy.length === 0 && (
-              <p className="mt-1 text-xs text-amber-400">
-                No hay composiciones cargadas en el mantenedor de Tabla US Navy.
-              </p>
-            )}
-          </div>
+        <Section title="Faena realizada">
           <TextareaField
             label="Faena realizada"
             rows={3}
