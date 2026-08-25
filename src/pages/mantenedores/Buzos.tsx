@@ -17,6 +17,7 @@ const empty: BuzoForm = {
   nombre_buzo: "",
   email: "",
   clase_matricula: "",
+  fecha_vencimiento_matricula: "",
   vencimiento_hipervarico: "",
   estado: "activo",
   // Todo buzo nuevo nace deshabilitado: un admin o supervisor debe habilitarlo
@@ -44,6 +45,7 @@ export function Buzos() {
       nombre_buzo: row.nombre_buzo,
       email: row.email ?? "",
       clase_matricula: row.clase_matricula ?? "",
+      fecha_vencimiento_matricula: row.fecha_vencimiento_matricula ?? "",
       vencimiento_hipervarico: row.vencimiento_hipervarico ?? "",
       estado: row.estado as BuzoForm["estado"],
       habilitado: row.habilitado,
@@ -73,6 +75,7 @@ export function Buzos() {
       ...parsed.data,
       email: parsed.data.email?.trim() ? parsed.data.email.trim().toLowerCase() : null,
       clase_matricula: parsed.data.clase_matricula || null,
+      fecha_vencimiento_matricula: parsed.data.fecha_vencimiento_matricula || null,
       vencimiento_hipervarico: parsed.data.vencimiento_hipervarico || null,
       ordenador_asignado: parsed.data.ordenador_asignado?.trim() || null,
     };
@@ -227,6 +230,12 @@ export function Buzos() {
               label="Clase / matrícula"
               value={form.clase_matricula ?? ""}
               onChange={(e) => setForm({ ...form, clase_matricula: e.target.value })}
+            />
+            <TextField
+              label="Vencimiento matrícula"
+              type="date"
+              value={form.fecha_vencimiento_matricula ?? ""}
+              onChange={(e) => setForm({ ...form, fecha_vencimiento_matricula: e.target.value })}
             />
             <TextField
               label="Vencimiento hiperbárico"

@@ -15,7 +15,13 @@ type Detalle = Tables<"perfil_inmersion"> & {
   supervisor: Tables<"supervisor"> | null;
   cliente: Tables<"cliente"> | null;
   centro_cultivo: Tables<"centro_cultivo"> | null;
-  equipo: Tables<"equipos"> | null;
+  equipo:
+    | (Tables<"equipos"> & {
+        equipo_mascaras: { mascaras: { nombre_masc: string } | null }[];
+        equipo_botellas_aux: { botellas_aux: { nombre_botella_aux: string } | null }[];
+        equipo_botellas_emer: { botellas_emer: { nombre_botella_emer: string } | null }[];
+      })
+    | null;
   tabulacion: Tables<"tabla_us_navy"> | null;
   tiempos: Tables<"tiempos_totales"> | null;
 };
@@ -42,7 +48,7 @@ export function DetalleInmersion() {
     const { data: row } = await supabase
       .from("perfil_inmersion")
       .select(
-        "*, buzo:buzo!perfil_inmersion_id_buzo_fkey(*), buzo_emergencia:buzo!perfil_inmersion_id_buzo_emergencia_fkey(*), supervisor:supervisor!id_supervisor(*), cliente:cliente!id_cliente(*), centro_cultivo:centro_cultivo!id_centro_cultivo(*), equipo:equipos!id_equipo(*), tabulacion:tabla_us_navy!id_navy(*), tiempos:tiempos_totales!id_inmersion(*)"
+        "*, buzo:buzo!perfil_inmersion_id_buzo_fkey(*), buzo_emergencia:buzo!perfil_inmersion_id_buzo_emergencia_fkey(*), supervisor:supervisor!id_supervisor(*), cliente:cliente!id_cliente(*), centro_cultivo:centro_cultivo!id_centro_cultivo(*), equipo:equipos!id_equipo(*, equipo_mascaras(mascaras(nombre_masc)), equipo_botellas_aux(botellas_aux(nombre_botella_aux)), equipo_botellas_emer(botellas_emer(nombre_botella_emer))), tabulacion:tabla_us_navy!id_navy(*), tiempos:tiempos_totales!id_inmersion(*)"
       )
       .eq("id_inmersion", id)
       .maybeSingle();
@@ -162,6 +168,28 @@ export function DetalleInmersion() {
           <Row label="Centro de costo" value={data.centro_cultivo?.nombre_centro ?? "—"} />
           <Row label="Embarcación" value={data.embarcacion ?? "—"} />
           <Row label="Equipo utilizado" value={data.equipo?.matricula_equipo ?? "—"} />
+          <Row
+            label="Máscaras"
+            value={
+              data.equipo?.equipo_mascaras.map((x) => x.mascaras?.nombre_masc).filter(Boolean).join(", ") || "—"
+            }
+          />
+          <Row
+            label="Botella banco auxiliar"
+            value={
+              data.equipo?.equipo_botellas_aux.map((x) => x.botellas_aux?.nombre_botella_aux).filter(Boolean).join(", ") ||
+              "—"
+            }
+          />
+          <Row
+            label="Botella banco emergencia"
+            value={
+              data.equipo?.equipo_botellas_emer
+                .map((x) => x.botellas_emer?.nombre_botella_emer)
+                .filter(Boolean)
+                .join(", ") || "—"
+            }
+          />
         </InfoCard>
 
         <InfoCard title="Perfil de la inmersión">

@@ -17,6 +17,7 @@ export const buzoSchema = z.object({
     .optional()
     .nullable(),
   clase_matricula: z.string().optional().nullable(),
+  fecha_vencimiento_matricula: z.string().optional().nullable(),
   vencimiento_hipervarico: z.string().optional().nullable(),
   estado: z.enum(["activo", "inactivo", "suspendido"]),
   habilitado: z.boolean(),
@@ -33,9 +34,9 @@ export type TablaUsNavyForm = z.infer<typeof tablaUsNavySchema>;
 export const equipoSchema = z.object({
   matricula_equipo: z.string().min(1, "Matrícula del equipo requerida"),
   vencimiento_equipo: z.string().min(1, "Vencimiento del equipo requerido"),
-  id_masc: z.string().optional().nullable(),
-  id_botella_aux: z.string().optional().nullable(),
-  id_botella_emer: z.string().optional().nullable(),
+  id_mascaras: z.array(z.string()).optional(),
+  id_botellas_aux: z.array(z.string()).optional(),
+  id_botellas_emer: z.array(z.string()).optional(),
   numero_serie_consola_aire: z.string().optional().nullable(),
   fecha_calibracion_consola_aire: z.string().optional().nullable(),
   numero_serie_consola_comunicaciones: z.string().optional().nullable(),

@@ -3,19 +3,20 @@ import { useAuth } from "../../lib/auth";
 import { useCrud } from "../../lib/useCrud";
 import { supabase } from "../../lib/supabaseClient";
 import { equipoSchema, type EquipoForm } from "../../lib/validators";
+import { mensajeDeError } from "../../lib/errores";
 import { formatDate } from "../../lib/format";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Modal } from "../../components/Modal";
-import { TextField, SelectField } from "../../components/FormField";
+import { TextField, MultiSelectField } from "../../components/FormField";
 import { Badge } from "../../components/Badge";
 import type { Tables } from "../../lib/types";
 
 const empty: EquipoForm = {
   matricula_equipo: "",
   vencimiento_equipo: "",
-  id_masc: "",
-  id_botella_aux: "",
-  id_botella_emer: "",
+  id_mascaras: [],
+  id_botellas_aux: [],
+  id_botellas_emer: [],
   numero_serie_consola_aire: "",
   fecha_calibracion_consola_aire: "",
   numero_serie_consola_comunicaciones: "",
@@ -39,10 +40,13 @@ const COLUMNAS_POR_DEFECTO = ["vencimiento", "estado"];
 
 export function Equipos() {
   const { esEditor, esAdmin } = useAuth();
-  const { rows, loading, insert, update, remove } = useCrud("equipos", "matricula_equipo");
+  const { rows, loading, reload } = useCrud("equipos", "matricula_equipo");
   const [mascaras, setMascaras] = useState<Tables<"mascaras">[]>([]);
   const [botellasAux, setBotellasAux] = useState<Tables<"botellas_aux">[]>([]);
   const [botellasEmer, setBotellasEmer] = useState<Tables<"botellas_emer">[]>([]);
+  const [relMascaras, setRelMascaras] = useState<Tables<"equipo_mascaras">[]>([]);
+  const [relBotellasAux, setRelBotellasAux] = useState<Tables<"equipo_botellas_aux">[]>([]);
+  const [relBotellasEmer, setRelBotellasEmer] = useState<Tables<"equipo_botellas_emer">[]>([]);
   const [modal, setModal] = useState<null | "nuevo" | Tables<"equipos">>(null);
   const [form, setForm] = useState<EquipoForm>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -57,6 +61,17 @@ export function Equipos() {
   });
   const [selectorAbierto, setSelectorAbierto] = useState(false);
 
+  async function cargarRelaciones() {
+    const [rm, rba, rbe] = await Promise.all([
+      supabase.from("equipo_mascaras").select("*"),
+      supabase.from("equipo_botellas_aux").select("*"),
+      supabase.from("equipo_botellas_emer").select("*"),
+    ]);
+    setRelMascaras(rm.data ?? []);
+    setRelBotellasAux(rba.data ?? []);
+    setRelBotellasEmer(rbe.data ?? []);
+  }
+
   useEffect(() => {
     (async () => {
       const [m, ba, be] = await Promise.all([
@@ -67,6 +82,7 @@ export function Equipos() {
       setMascaras(m.data ?? []);
       setBotellasAux(ba.data ?? []);
       setBotellasEmer(be.data ?? []);
+      await cargarRelaciones();
     })();
   }, []);
 
@@ -87,9 +103,9 @@ export function Equipos() {
     setForm({
       matricula_equipo: row.matricula_equipo ?? "",
       vencimiento_equipo: row.vencimiento_equipo ?? "",
-      id_masc: row.id_masc ?? "",
-      id_botella_aux: row.id_botella_aux ?? "",
-      id_botella_emer: row.id_botella_emer ?? "",
+      id_mascaras: relMascaras.filter((r) => r.id_equipo === row.id_equipo).map((r) => r.id_masc),
+      id_botellas_aux: relBotellasAux.filter((r) => r.id_equipo === row.id_equipo).map((r) => r.id_botella_aux),
+      id_botellas_emer: relBotellasEmer.filter((r) => r.id_equipo === row.id_equipo).map((r) => r.id_botella_emer),
       numero_serie_consola_aire: row.numero_serie_consola_aire ?? "",
       fecha_calibracion_consola_aire: row.fecha_calibracion_consola_aire ?? "",
       numero_serie_consola_comunicaciones: row.numero_serie_consola_comunicaciones ?? "",
@@ -99,6 +115,43 @@ export function Equipos() {
     });
     setErrors({});
     setModal(row);
+  }
+
+  // Reemplaza por completo los accesorios asociados a un equipo: borra los
+  // vínculos existentes y crea los que están marcados ahora en el formulario.
+  async function sincronizarAccesorios(idEquipo: string, d: ReturnType<typeof equipoSchema.parse>): Promise<string | null> {
+    const borrados = await Promise.all([
+      supabase.from("equipo_mascaras").delete().eq("id_equipo", idEquipo),
+      supabase.from("equipo_botellas_aux").delete().eq("id_equipo", idEquipo),
+      supabase.from("equipo_botellas_emer").delete().eq("id_equipo", idEquipo),
+    ]);
+    const errorBorrado = borrados.find((r) => r.error)?.error;
+    if (errorBorrado) return mensajeDeError(errorBorrado, "actualizar los accesorios del equipo");
+
+    const inserts = [];
+    if (d.id_mascaras?.length)
+      inserts.push(
+        supabase.from("equipo_mascaras").insert(d.id_mascaras.map((id_masc) => ({ id_equipo: idEquipo, id_masc })))
+      );
+    if (d.id_botellas_aux?.length)
+      inserts.push(
+        supabase
+          .from("equipo_botellas_aux")
+          .insert(d.id_botellas_aux.map((id_botella_aux) => ({ id_equipo: idEquipo, id_botella_aux })))
+      );
+    if (d.id_botellas_emer?.length)
+      inserts.push(
+        supabase
+          .from("equipo_botellas_emer")
+          .insert(d.id_botellas_emer.map((id_botella_emer) => ({ id_equipo: idEquipo, id_botella_emer })))
+      );
+
+    if (inserts.length) {
+      const resultados = await Promise.all(inserts);
+      const errorInsert = resultados.find((r) => r.error)?.error;
+      if (errorInsert) return mensajeDeError(errorInsert, "guardar los accesorios del equipo");
+    }
+    return null;
   }
 
   async function handleSubmit() {
@@ -114,9 +167,6 @@ export function Equipos() {
     const payload = {
       matricula_equipo: d.matricula_equipo,
       vencimiento_equipo: d.vencimiento_equipo,
-      id_masc: d.id_masc || null,
-      id_botella_aux: d.id_botella_aux || null,
-      id_botella_emer: d.id_botella_emer || null,
       numero_serie_consola_aire: d.numero_serie_consola_aire || null,
       fecha_calibracion_consola_aire: d.fecha_calibracion_consola_aire || null,
       numero_serie_consola_comunicaciones: d.numero_serie_consola_comunicaciones || null,
@@ -124,20 +174,62 @@ export function Equipos() {
       numero_serie_cargador_alta_presion: d.numero_serie_cargador_alta_presion || null,
       fecha_mantencion_cargador_alta_presion: d.fecha_mantencion_cargador_alta_presion || null,
     };
-    const err =
-      modal === "nuevo"
-        ? await insert(payload)
-        : await update({ id_equipo: (modal as Tables<"equipos">).id_equipo }, payload);
+
+    let idEquipo: string;
+    if (modal === "nuevo") {
+      const { data, error } = await supabase.from("equipos").insert(payload).select("id_equipo").single();
+      if (error) {
+        setSaving(false);
+        setErrors({ _global: mensajeDeError(error, "guardar el equipo") });
+        return;
+      }
+      idEquipo = data.id_equipo;
+    } else {
+      idEquipo = (modal as Tables<"equipos">).id_equipo;
+      const { error } = await supabase.from("equipos").update(payload).eq("id_equipo", idEquipo);
+      if (error) {
+        setSaving(false);
+        setErrors({ _global: mensajeDeError(error, "guardar el equipo") });
+        return;
+      }
+    }
+
+    const errorAccesorios = await sincronizarAccesorios(idEquipo, d);
+    if (errorAccesorios) {
+      setSaving(false);
+      setErrors({ _global: errorAccesorios });
+      return;
+    }
+
+    await Promise.all([reload(), cargarRelaciones()]);
     setSaving(false);
-    if (err) setErrors({ _global: err });
-    else setModal(null);
+    setModal(null);
   }
 
   async function handleDelete(row: Tables<"equipos">) {
     if (!confirm(`¿Eliminar el equipo ${row.matricula_equipo ?? "sin matrícula"}?`)) return;
-    const err = await remove({ id_equipo: row.id_equipo });
-    if (err) alert("No se pudo eliminar: " + err);
+    const { error } = await supabase.from("equipos").delete().eq("id_equipo", row.id_equipo);
+    if (error) {
+      alert(mensajeDeError(error, "eliminar el equipo"));
+      return;
+    }
+    await Promise.all([reload(), cargarRelaciones()]);
   }
+
+  function nombresDe<T extends { id_equipo: string }>(
+    relaciones: T[],
+    idEquipo: string,
+    idCampo: keyof T,
+    catalogo: { id: string; nombre: string }[]
+  ): string {
+    const ids = relaciones.filter((r) => r.id_equipo === idEquipo).map((r) => r[idCampo] as unknown as string);
+    const nombres = ids.map((id) => catalogo.find((c) => c.id === id)?.nombre).filter(Boolean);
+    return nombres.length ? nombres.join(", ") : "—";
+  }
+
+  const catalogoMascaras = mascaras.map((m) => ({ id: m.id_masc, nombre: m.nombre_masc }));
+  const catalogoBotellasAux = botellasAux.map((b) => ({ id: b.id_botella_aux, nombre: b.nombre_botella_aux }));
+  const catalogoBotellasEmer = botellasEmer.map((b) => ({ id: b.id_botella_emer, nombre: b.nombre_botella_emer }));
 
   const columnasOpcionales: (Column<Tables<"equipos">> & { id: string })[] = [
     {
@@ -155,18 +247,18 @@ export function Equipos() {
     },
     {
       id: "mascara",
-      header: "Máscara",
-      cell: (r) => mascaras.find((m) => m.id_masc === r.id_masc)?.nombre_masc ?? "—",
+      header: "Máscaras",
+      cell: (r) => nombresDe(relMascaras, r.id_equipo, "id_masc", catalogoMascaras),
     },
     {
       id: "botella_aux",
-      header: "Botella banco auxiliar",
-      cell: (r) => botellasAux.find((b) => b.id_botella_aux === r.id_botella_aux)?.nombre_botella_aux ?? "—",
+      header: "Botellas banco auxiliar",
+      cell: (r) => nombresDe(relBotellasAux, r.id_equipo, "id_botella_aux", catalogoBotellasAux),
     },
     {
       id: "botella_emer",
-      header: "Botella banco emergencia",
-      cell: (r) => botellasEmer.find((b) => b.id_botella_emer === r.id_botella_emer)?.nombre_botella_emer ?? "—",
+      header: "Botellas banco emergencia",
+      cell: (r) => nombresDe(relBotellasEmer, r.id_equipo, "id_botella_emer", catalogoBotellasEmer),
     },
     {
       id: "serie_consola_aire",
@@ -296,22 +388,22 @@ export function Equipos() {
               onChange={(e) => setForm({ ...form, vencimiento_equipo: e.target.value })}
               error={errors.vencimiento_equipo}
             />
-            <SelectField
-              label="Máscara"
-              value={form.id_masc ?? ""}
-              onChange={(e) => setForm({ ...form, id_masc: e.target.value })}
+            <MultiSelectField
+              label="Máscaras"
+              value={form.id_mascaras ?? []}
+              onChange={(v) => setForm({ ...form, id_mascaras: v })}
               options={mascaras.map((m) => ({ value: m.id_masc, label: m.nombre_masc }))}
             />
-            <SelectField
-              label="Botella banco auxiliar"
-              value={form.id_botella_aux ?? ""}
-              onChange={(e) => setForm({ ...form, id_botella_aux: e.target.value })}
+            <MultiSelectField
+              label="Botellas banco auxiliar"
+              value={form.id_botellas_aux ?? []}
+              onChange={(v) => setForm({ ...form, id_botellas_aux: v })}
               options={botellasAux.map((b) => ({ value: b.id_botella_aux, label: b.nombre_botella_aux }))}
             />
-            <SelectField
-              label="Botella banco emergencia"
-              value={form.id_botella_emer ?? ""}
-              onChange={(e) => setForm({ ...form, id_botella_emer: e.target.value })}
+            <MultiSelectField
+              label="Botellas banco emergencia"
+              value={form.id_botellas_emer ?? []}
+              onChange={(v) => setForm({ ...form, id_botellas_emer: v })}
               options={botellasEmer.map((b) => ({ value: b.id_botella_emer, label: b.nombre_botella_emer }))}
             />
             <TextField

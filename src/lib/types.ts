@@ -72,6 +72,7 @@ export type Database = {
           created_at: string
           email: string | null
           estado: string
+          fecha_vencimiento_matricula: string | null
           habilitado: boolean
           id_buzo: string
           id_equipo_asignado: string | null
@@ -86,6 +87,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           estado?: string
+          fecha_vencimiento_matricula?: string | null
           habilitado?: boolean
           id_buzo?: string
           id_equipo_asignado?: string | null
@@ -100,6 +102,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           estado?: string
+          fecha_vencimiento_matricula?: string | null
           habilitado?: boolean
           id_buzo?: string
           id_equipo_asignado?: string | null
@@ -174,6 +177,105 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      equipo_botellas_aux: {
+        Row: {
+          created_at: string
+          id_botella_aux: string
+          id_equipo: string
+        }
+        Insert: {
+          created_at?: string
+          id_botella_aux: string
+          id_equipo: string
+        }
+        Update: {
+          created_at?: string
+          id_botella_aux?: string
+          id_equipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipo_botellas_aux_id_botella_aux_fkey"
+            columns: ["id_botella_aux"]
+            isOneToOne: false
+            referencedRelation: "botellas_aux"
+            referencedColumns: ["id_botella_aux"]
+          },
+          {
+            foreignKeyName: "equipo_botellas_aux_id_equipo_fkey"
+            columns: ["id_equipo"]
+            isOneToOne: false
+            referencedRelation: "equipos"
+            referencedColumns: ["id_equipo"]
+          },
+        ]
+      }
+      equipo_botellas_emer: {
+        Row: {
+          created_at: string
+          id_botella_emer: string
+          id_equipo: string
+        }
+        Insert: {
+          created_at?: string
+          id_botella_emer: string
+          id_equipo: string
+        }
+        Update: {
+          created_at?: string
+          id_botella_emer?: string
+          id_equipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipo_botellas_emer_id_botella_emer_fkey"
+            columns: ["id_botella_emer"]
+            isOneToOne: false
+            referencedRelation: "botellas_emer"
+            referencedColumns: ["id_botella_emer"]
+          },
+          {
+            foreignKeyName: "equipo_botellas_emer_id_equipo_fkey"
+            columns: ["id_equipo"]
+            isOneToOne: false
+            referencedRelation: "equipos"
+            referencedColumns: ["id_equipo"]
+          },
+        ]
+      }
+      equipo_mascaras: {
+        Row: {
+          created_at: string
+          id_equipo: string
+          id_masc: string
+        }
+        Insert: {
+          created_at?: string
+          id_equipo: string
+          id_masc: string
+        }
+        Update: {
+          created_at?: string
+          id_equipo?: string
+          id_masc?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipo_mascaras_id_equipo_fkey"
+            columns: ["id_equipo"]
+            isOneToOne: false
+            referencedRelation: "equipos"
+            referencedColumns: ["id_equipo"]
+          },
+          {
+            foreignKeyName: "equipo_mascaras_id_masc_fkey"
+            columns: ["id_masc"]
+            isOneToOne: false
+            referencedRelation: "mascaras"
+            referencedColumns: ["id_masc"]
+          },
+        ]
       }
       equipos: {
         Row: {
