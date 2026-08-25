@@ -373,13 +373,13 @@ export function NuevaInmersion() {
 
         <Section title="Tiempos totales">
           <div>
-            <p className="field-label">Tiempo total fondo (mins)</p>
+            <p className="field-label">Tiempo de Fondo (mins)</p>
             <p className="field-input flex items-center bg-navy-900/30 text-slate-400">
               {tiempoTotalFondo ?? "Se calcula desde las horas de fondo"}
             </p>
           </div>
           <TextField
-            label="Tiempo total descompresión (mins)"
+            label="Tiempo de descompresión (mins)"
             type="number"
             min={0}
             value={form.tiempo_total_descompresion}

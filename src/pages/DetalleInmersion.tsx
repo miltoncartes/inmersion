@@ -115,10 +115,20 @@ export function DetalleInmersion() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div id="print-header" className="print-only mb-4 hidden text-center">
-        <Logo size={40} className="mx-auto mb-2" />
-        <h1 className="text-2xl font-bold">Inmersión</h1>
-        <p className="mt-1 text-slate-500">{formatDate(data.fecha_inmersion)}</p>
+      <div
+        id="print-header"
+        className="print-only hidden print:mb-4 print:flex print:items-center print:justify-between print:border-b-2 print:border-[#1f4e79] print:pb-3"
+      >
+        <Logo size={40} />
+        <div className="print:text-center">
+          <h1 className="print:text-xl print:font-extrabold print:uppercase print:tracking-wide print:text-[#1f4e79]">
+            Bitácora de buceo
+          </h1>
+          <p className="print:text-[11px] print:font-medium print:uppercase print:tracking-widest print:text-slate-500">
+            Informe de inmersión
+          </p>
+        </div>
+        <p className="print:text-sm print:font-semibold print:text-slate-700">{formatDate(data.fecha_inmersion)}</p>
       </div>
 
       <div className="no-print mb-6 flex items-center justify-between">
@@ -190,6 +200,11 @@ export function DetalleInmersion() {
                 .join(", ") || "—"
             }
           />
+          <Row label="N° serie consola de aire" value={data.equipo?.numero_serie_consola_aire ?? "—"} />
+          <Row
+            label="N° serie consola de comunicaciones"
+            value={data.equipo?.numero_serie_consola_comunicaciones ?? "—"}
+          />
         </InfoCard>
 
         <InfoCard title="Perfil de la inmersión">
@@ -201,10 +216,10 @@ export function DetalleInmersion() {
         </InfoCard>
 
         <InfoCard title="Tiempos totales">
-          <Row label="Tiempo total fondo" value={data.tiempos?.tiempo_total_fondo != null ? `${data.tiempos.tiempo_total_fondo} min` : "—"} />
+          <Row label="Tiempo de Fondo" value={data.tiempos?.tiempo_total_fondo != null ? `${data.tiempos.tiempo_total_fondo} min` : "—"} />
           <Row label="Tiempo total buceo" value={data.tiempos?.tiempo_total_buceo != null ? `${data.tiempos.tiempo_total_buceo} min` : "—"} />
           <Row label="Tabulación Tabla US Navy" value={data.tabulacion?.composicion ?? "—"} />
-          <Row label="Tiempo total descompresión" value={data.tiempos?.tiempo_total_descompresion != null ? `${data.tiempos.tiempo_total_descompresion} min` : "—"} />
+          <Row label="Tiempo de descompresión" value={data.tiempos?.tiempo_total_descompresion != null ? `${data.tiempos.tiempo_total_descompresion} min` : "—"} />
         </InfoCard>
 
         <InfoCard title="Condiciones">
@@ -298,9 +313,11 @@ export function DetalleInmersion() {
 
 function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="card space-y-3 p-5 print:space-y-1 print:border-0 print:bg-transparent print:p-0 print:shadow-none">
-      <p className="eyebrow border-b border-navy-700/70 pb-3 print:pb-1 print:text-black">{title}</p>
-      <div className="space-y-2.5 print:grid print:grid-cols-2 print:gap-x-6 print:gap-y-0.5 print:space-y-0">
+    <div className="card space-y-3 p-5 print:space-y-0 print:overflow-hidden print:rounded-md print:border print:border-[#94a3b8] print:bg-transparent print:p-0 print:shadow-none">
+      <p className="eyebrow border-b border-navy-700/70 pb-3 print:m-0 print:border-0 print:bg-[#1f4e79] print:py-1.5 print:text-center print:text-[11px] print:font-bold print:tracking-wider print:text-white">
+        {title}
+      </p>
+      <div className="space-y-2.5 print:grid print:grid-cols-2 print:gap-x-0 print:gap-y-0 print:space-y-0 print:p-2.5">
         {children}
       </div>
     </div>
@@ -309,8 +326,8 @@ function InfoCard({ title, children }: { title: string; children: React.ReactNod
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 text-sm print:text-xs">
-      <span className="text-slate-400 print:text-slate-600">{label}</span>
+    <div className="flex items-center justify-between gap-4 text-sm print:border-b print:border-[#e2e8f0] print:px-1 print:py-1 print:text-xs">
+      <span className="text-slate-400 print:text-[#3f5872]">{label}</span>
       <span className="text-right font-medium text-slate-100 print:text-black">{value}</span>
     </div>
   );
