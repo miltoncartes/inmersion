@@ -4,6 +4,7 @@ import { useCrud } from "../../lib/useCrud";
 import { supabase } from "../../lib/supabaseClient";
 import { equipoSchema, type EquipoForm } from "../../lib/validators";
 import { mensajeDeError } from "../../lib/errores";
+import { invalidarCatalogos } from "../../lib/catalogos";
 import { formatDate } from "../../lib/format";
 import { DataTable, type Column } from "../../components/DataTable";
 import { Modal } from "../../components/Modal";
@@ -201,6 +202,7 @@ export function Equipos() {
       return;
     }
 
+    invalidarCatalogos();
     await Promise.all([reload(), cargarRelaciones()]);
     setSaving(false);
     setModal(null);
@@ -213,6 +215,7 @@ export function Equipos() {
       alert(mensajeDeError(error, "eliminar el equipo"));
       return;
     }
+    invalidarCatalogos();
     await Promise.all([reload(), cargarRelaciones()]);
   }
 

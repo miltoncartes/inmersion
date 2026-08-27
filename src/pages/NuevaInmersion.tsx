@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../lib/auth";
 import { TextField, SelectField, TextareaField } from "../components/FormField";
 import { mensajeDeError } from "../lib/errores";
+import { getCatalogos } from "../lib/catalogos";
 import { minutesBetween, todayISO, parseDecimal } from "../lib/format";
 import type { Tables } from "../lib/types";
 
@@ -48,18 +49,12 @@ export function NuevaInmersion() {
 
   useEffect(() => {
     (async () => {
-      const [b, s, c, e, n] = await Promise.all([
-        supabase.from("buzo").select("*").eq("estado", "activo").order("nombre_buzo"),
-        supabase.from("supervisor").select("*").order("nombre_super"),
-        supabase.from("cliente").select("*").order("nombre_cliente"),
-        supabase.from("equipos").select("*").order("matricula_equipo"),
-        supabase.from("tabla_us_navy").select("*").order("composicion"),
-      ]);
-      setBuzos(b.data ?? []);
-      setSupervisores(s.data ?? []);
-      setClientes(c.data ?? []);
-      setEquipos(e.data ?? []);
-      setTablaNavy(n.data ?? []);
+      const catalogos = await getCatalogos();
+      setBuzos(catalogos.buzos);
+      setSupervisores(catalogos.supervisores);
+      setClientes(catalogos.clientes);
+      setEquipos(catalogos.equipos);
+      setTablaNavy(catalogos.tablaNavy);
 
       if (id) {
         const { data: perfil } = await supabase
