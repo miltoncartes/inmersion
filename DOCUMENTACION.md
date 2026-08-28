@@ -328,7 +328,7 @@ Regla adicional: `CHECK` de orden cronológico — dejó superficie ≤ llegó f
 |---|---|---|---|---|
 | id_inmersion | uuid | No | PK / FK → perfil_inmersion | Relación 1:1 con la inmersión; se borra en cascada si se borra la inmersión |
 | id_buzo | uuid | No | FK → buzo | Debe coincidir con el buzo de `perfil_inmersion` (validado por trigger) |
-| tiempo_total_fondo | integer | Sí | CHECK ≥ 0 | Minutos totales en el fondo |
+| tiempo_total_fondo | integer | Sí | CHECK ≥ 0 | Minutos desde que deja la superficie hasta que deja el fondo (descenso + permanencia en fondo) |
 | tiempo_total_descompresion | integer | Sí | CHECK ≥ 0 | Minutos totales de descompresión |
 | tiempo_total_buceo | integer | Sí | CHECK ≥ 0 | Minutos totales de buceo (superficie a superficie) |
 | profundidad_maxima | numeric(5,1) | Sí | CHECK ≥ 0 | Profundidad máxima alcanzada, en metros |
@@ -359,7 +359,7 @@ Muestra los indicadores clave: inmersiones del mes, buzos activos, y próximos v
 1. Ve a **Inmersiones → Nueva inmersión** (requiere rol `supervisor` o `admin`).
 2. Completa **Identificación**: fecha, buzo, ubicación.
 3. Completa **Perfil de la inmersión**: profundidad máxima y las 4 horas (dejó superficie, llegó fondo, dejó fondo, llegó superficie). El sistema valida que estén en orden cronológico.
-4. Completa **Tiempos totales**: tiempo en fondo, descompresión y buceo total (en minutos).
+4. Completa **Tiempos totales**: solo la descompresión se escribe a mano; el tiempo de fondo y el buceo total se calculan solos desde las horas del punto 3.
 5. Completa **Condiciones**: temperatura del agua y estado del mar.
 6. Completa **Equipo**: número de serie del ordenador y tipo de equipo utilizado.
 7. Completa **Tabulación y faena realizada**: tabla de descompresión usada y descripción del trabajo.
@@ -519,3 +519,20 @@ Un usuario con rol buzo no ve Mantenedores ni Administración (ocultos en la nav
 |---|---|---|
 | /nueva-password | Definir nueva contraseña desde el enlace del correo | público (con enlace válido) |
 | /mantenedores/tabla-us-navy | Mantenedor Tabla US Navy | admin / supervisor |
+
+---
+
+## 16. Cambios versión 1.7.1
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 16.1 Nuevo cálculo del Tiempo de Fondo
+En **Nueva inmersión → Tiempos totales**, el campo **Tiempo de Fondo (mins)** ahora suma el descenso más la permanencia en el fondo, es decir el tramo completo **desde que el buzo deja la superficie hasta que deja el fondo**. Antes contaba solo desde que llegaba al fondo.
+
+| Ejemplo | Antes | Ahora |
+|---|---|---|
+| dejó superficie 11:02 · llegó fondo 11:03 · dejó fondo 11:50 | 47 min | **48 min** |
+
+Es el *bottom time* de las tablas US Navy. El campo **Tiempo total buceo** no cambió: sigue midiendo de superficie a superficie (`hora_dejo_superficie` → `hora_llego_superficie`).
+
+Las inmersiones registradas **antes** de este cambio conservan en `tiempos_totales.tiempo_total_fondo` el valor calculado con la regla anterior; solo se recalculan si se reabren y se vuelven a guardar.

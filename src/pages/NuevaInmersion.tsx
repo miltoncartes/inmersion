@@ -111,7 +111,8 @@ export function NuevaInmersion() {
       .then(({ data }) => setCentros(data ?? []));
   }, [form.id_cliente]);
 
-  const tiempoTotalFondo = minutesBetween(form.hora_llego_fondo, form.hora_dejo_fondo);
+  // Bottom time US Navy: desde que deja la superficie hasta que deja el fondo (descenso + fondo).
+  const tiempoTotalFondo = minutesBetween(form.hora_dejo_superficie, form.hora_dejo_fondo);
   const tiempoTotalBuceo = minutesBetween(form.hora_dejo_superficie, form.hora_llego_superficie);
 
   async function handleSubmit(e: FormEvent) {
@@ -370,7 +371,7 @@ export function NuevaInmersion() {
           <div>
             <p className="field-label">Tiempo de Fondo (mins)</p>
             <p className="field-input flex items-center bg-navy-900/30 text-slate-400">
-              {tiempoTotalFondo ?? "Se calcula desde las horas de fondo"}
+              {tiempoTotalFondo ?? "Se calcula desde dejó superficie hasta dejó fondo"}
             </p>
           </div>
           <TextField
