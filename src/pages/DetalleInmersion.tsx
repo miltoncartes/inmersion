@@ -29,7 +29,7 @@ type Detalle = Tables<"perfil_inmersion"> & {
 export function DetalleInmersion() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { esAdmin } = useAuth();
+  const { esAdmin, esEditor } = useAuth();
   const [data, setData] = useState<Detalle | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -234,7 +234,7 @@ export function DetalleInmersion() {
         )}
 
         <InfoCard title="Validación">
-          {esAdmin && (
+          {esEditor && (
             <div className="no-print space-y-3">
               <div>
                 <label className="field-label">Observación</label>

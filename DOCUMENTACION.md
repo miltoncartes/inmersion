@@ -184,7 +184,7 @@ Ya están como valores por defecto en `src/lib/supabaseClient.ts`, así que el b
 | Ruta | Pantalla | Acceso |
 |---|---|---|
 | `/login` | Inicio de sesión / registro | público |
-| `/` | Resumen (KPIs: inmersiones del mes, buzos activos, vencimientos próximos) | usuario activo |
+| `/` | Resumen (KPIs: inmersiones del mes, total histórico, buzos activos, minutos de buceo del mes) | usuario activo |
 | `/inmersiones` | Listado y filtros | usuario activo |
 | `/inmersiones/nueva` | Registrar inmersión | `admin` / `supervisor` |
 | `/inmersiones/:id` | Detalle de inmersión | usuario activo |
@@ -353,7 +353,7 @@ Todo usuario nuevo entra como `lectura` por defecto; un administrador debe subir
 4. Si acabas de registrarte, avisa a un administrador para que te asigne el rol correspondiente (por defecto quedas en solo lectura).
 
 ### 13.3 Resumen (pantalla principal)
-Muestra los indicadores clave: inmersiones del mes, buzos activos, y próximos vencimientos (certificados hiperbáricos de buzos y de equipos).
+Muestra los indicadores clave: inmersiones del mes, total histórico, buzos activos y minutos de buceo del mes en curso (suma de `tiempo_total_buceo` de todos los buzos).
 
 ### 13.4 Registrar una inmersión
 1. Ve a **Inmersiones → Nueva inmersión** (requiere rol `supervisor` o `admin`).
@@ -536,3 +536,31 @@ En **Nueva inmersión → Tiempos totales**, el campo **Tiempo de Fondo (mins)**
 Es el *bottom time* de las tablas US Navy. El campo **Tiempo total buceo** no cambió: sigue midiendo de superficie a superficie (`hora_dejo_superficie` → `hora_llego_superficie`).
 
 Las inmersiones registradas **antes** de este cambio conservan en `tiempos_totales.tiempo_total_fondo` el valor calculado con la regla anterior; solo se recalculan si se reabren y se vuelven a guardar.
+
+---
+
+## 17. Cambios versión 1.7.2
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 17.1 Los supervisores validan inmersiones
+El bloque **Validación** de la ficha de una inmersión (observación y botón *Validar*) ahora es visible para `admin` **y** `supervisor`. El permiso real vive en el trigger `protect_validacion_fields`, cuya condición pasó de `is_admin()` a `is_editor()`: quien no sea editor sigue sin poder tocar `estado_validacion`, `observacion_admin`, `validado_por` ni `validado_at` — la base revierte esos campos en silencio.
+
+**Una inmersión ya validada la sigue cerrando solo el admin.** La segunda regla del trigger no cambió: si `old.estado_validacion = 'validada'` y quien edita no es admin, la operación falla con "La inmersión ya fue validada y no puede modificarse.". Un supervisor no puede corregir ni su propia validación.
+
+### 17.2 Sello de auditoría de la validación
+Hasta ahora `validado_por` y `validado_at` nunca se llenaban: el cliente solo escribía el estado y la observación, y el texto "Validada el …" de la ficha salía siempre vacío. Con más de un rol validando, el trigger ahora estampa ambos campos en el momento en que la inmersión pasa a `validada`:
+
+```sql
+if new.estado_validacion = 'validada' and old.estado_validacion <> 'validada' then
+  new.validado_por := (select auth.uid());
+  new.validado_at := now();
+end if;
+```
+
+Lo escribe la base, no el cliente, así que no se puede falsear desde el frontend.
+
+### 17.3 Nueva tarjeta "Minutos de Buceo Mensual"
+En el Resumen, la tarjeta **Vencimientos próx.** fue reemplazada por **Minutos de Buceo Mensual**: la suma de `tiempos_totales.tiempo_total_buceo` de todas las inmersiones del mes en curso, de todos los buzos. Se eliminaron las dos consultas de vencimientos, así que la pantalla hace 5 consultas en vez de 6.
+
+**Consecuencia a tener presente:** desapareció el único aviso proactivo de vencimientos. Los equipos conservan su insignia de estado en el mantenedor de Equipos, pero el mantenedor de Buzos muestra la fecha del hipervárico como texto plano, sin destacar los próximos a vencer. Queda pendiente agregarle esa insignia.

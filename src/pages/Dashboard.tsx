@@ -26,7 +26,7 @@ export function Dashboard() {
   const [totalMes, setTotalMes] = useState(0);
   const [totalHistorico, setTotalHistorico] = useState(0);
   const [buzosActivos, setBuzosActivos] = useState(0);
-  const [vencimientos, setVencimientos] = useState(0);
+  const [minutosMes, setMinutosMes] = useState(0);
   const [recientes, setRecientes] = useState<Recent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,28 +36,18 @@ export function Dashboard() {
       setLoading(true);
       const now = new Date();
       const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-      const en30dias = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const hoyISO = now.toISOString().slice(0, 10);
 
       // Solo supervisores y administradores ven el detalle de las últimas
       // inmersiones (nombre del buzo, cliente, ubicación y profundidad); un
       // buzo no necesita ese resumen y así evitamos la consulta de más.
-      const [mes, historico, buzos, vencBuzos, vencEquipos, recent] = await Promise.all([
+      const [mes, historico, buzos, buceoMes, recent] = await Promise.all([
         supabase.from("perfil_inmersion").select("id_inmersion", { count: "exact", head: true }).gte("fecha_inmersion", inicioMes),
         supabase.from("perfil_inmersion").select("id_inmersion", { count: "exact", head: true }),
         supabase.from("buzo").select("id_buzo", { count: "exact", head: true }).eq("estado", "activo"),
         supabase
-          .from("buzo")
-          .select("id_buzo", { count: "exact", head: true })
-          .not("vencimiento_hipervarico", "is", null)
-          .lte("vencimiento_hipervarico", en30dias)
-          .gte("vencimiento_hipervarico", hoyISO),
-        supabase
-          .from("equipos")
-          .select("id_equipo", { count: "exact", head: true })
-          .not("vencimiento_equipo", "is", null)
-          .lte("vencimiento_equipo", en30dias)
-          .gte("vencimiento_equipo", hoyISO),
+          .from("perfil_inmersion")
+          .select("tiempos:tiempos_totales!id_inmersion(tiempo_total_buceo)")
+          .gte("fecha_inmersion", inicioMes),
         esEditor
           ? supabase
               .from("perfil_inmersion")
@@ -71,13 +61,21 @@ export function Dashboard() {
 
       // Si alguna consulta falla hay que decirlo: mostrar "bitácora vacía"
       // cuando en realidad hubo un error oculta el problema real.
-      const fallo = [mes, historico, buzos, vencBuzos, vencEquipos, recent].find((r) => r.error);
+      const fallo = [mes, historico, buzos, buceoMes, recent].find((r) => r.error);
       setError(fallo?.error ? mensajeDeError(fallo.error, "cargar el resumen") : null);
 
       setTotalMes(mes.count ?? 0);
       setTotalHistorico(historico.count ?? 0);
       setBuzosActivos(buzos.count ?? 0);
-      setVencimientos((vencBuzos.count ?? 0) + (vencEquipos.count ?? 0));
+      // Minutos buceados en el mes: es la suma de todos los buzos, no la del
+      // usuario en sesion, porque el SELECT de tiempos_totales alcanza a todas
+      // las inmersiones para cualquier usuario activo.
+      setMinutosMes(
+        ((buceoMes.data as any[]) ?? []).reduce((acc, fila) => {
+          const t = Array.isArray(fila.tiempos) ? fila.tiempos[0] : fila.tiempos;
+          return acc + (t?.tiempo_total_buceo ?? 0);
+        }, 0)
+      );
       setRecientes((recent.data as any) ?? []);
       setLoading(false);
     })();
@@ -117,7 +115,11 @@ export function Dashboard() {
             <StatTile label="Inmersiones del mes" value={totalMes} />
             <StatTile label="Total histórico" value={totalHistorico} />
             <StatTile label="Buzos activos" value={buzosActivos} />
-            <StatTile label="Vencimientos próx." value={vencimientos} hint="Próximos 30 días" />
+            <StatTile
+              label="Minutos de Buceo Mensual"
+              value={minutosMes.toLocaleString("es-CL")}
+              hint="Mes en curso · todos los buzos"
+            />
           </div>
 
           {esEditor && (
