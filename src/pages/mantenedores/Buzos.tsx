@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../lib/auth";
 import { useCrud } from "../../lib/useCrud";
 import { supabase } from "../../lib/supabaseClient";
@@ -12,6 +12,12 @@ import { Badge } from "../../components/Badge";
 import type { Tables } from "../../lib/types";
 
 const ESTADOS = ["activo", "inactivo", "suspendido"];
+// Mismo patron que el mantenedor de Equipos: la seleccion de columnas se
+// guarda por navegador, asi cada usuario arma la tabla que le sirve.
+const CLAVE_COLUMNAS = "mdibuceo_buzos_columnas";
+// Por defecto se muestran las mismas columnas de siempre, para que nadie vea
+// cambiar su tabla sin haberlo pedido.
+const COLUMNAS_POR_DEFECTO = ["rut", "correo", "clase_matricula", "venc_hipervarico", "ordenador", "estado"];
 const empty: BuzoForm = {
   rut_buzo: "",
   nombre_buzo: "",
@@ -33,6 +39,23 @@ export function Buzos() {
   const [form, setForm] = useState<BuzoForm>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [columnasVisibles, setColumnasVisibles] = useState<string[]>(() => {
+    try {
+      const guardado = localStorage.getItem(CLAVE_COLUMNAS);
+      return guardado ? JSON.parse(guardado) : COLUMNAS_POR_DEFECTO;
+    } catch {
+      return COLUMNAS_POR_DEFECTO;
+    }
+  });
+  const [selectorAbierto, setSelectorAbierto] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(CLAVE_COLUMNAS, JSON.stringify(columnasVisibles));
+  }, [columnasVisibles]);
+
+  function alternarColumna(id: string) {
+    setColumnasVisibles((cols) => (cols.includes(id) ? cols.filter((c) => c !== id) : [...cols, id]));
+  }
 
   function openNuevo() {
     setForm(empty);
@@ -129,34 +152,54 @@ export function Buzos() {
     if (err) alert(mensajeDeError({ message: err }, "eliminar el buzo"));
   }
 
+  const columnasOpcionales: (Column<Tables<"buzo">> & { id: string })[] = [
+    { id: "rut", header: "RUT", cell: (r) => r.rut_buzo, className: "whitespace-nowrap min-w-[120px]" },
+    { id: "correo", header: "Correo", cell: (r) => r.email ?? "—", className: "whitespace-nowrap" },
+    {
+      id: "clase_matricula",
+      header: "Clase / matrícula",
+      cell: (r) => r.clase_matricula ?? "—",
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "venc_matricula",
+      header: "Venc. matrícula",
+      cell: (r) => formatDate(r.fecha_vencimiento_matricula),
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "venc_hipervarico",
+      header: "Venc. hiperbárico",
+      cell: (r) => formatDate(r.vencimiento_hipervarico),
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "ordenador",
+      header: "Ordenador asignado",
+      cell: (r) => r.ordenador_asignado ?? "—",
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "habilitado",
+      header: "Acceso al sistema",
+      cell: (r) => <Badge tone={r.habilitado ? "activo" : "inactivo"}>{r.habilitado ? "habilitado" : "deshabilitado"}</Badge>,
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "estado",
+      header: "Estado",
+      cell: (r) => <Badge tone={r.estado}>{r.estado}</Badge>,
+      className: "whitespace-nowrap",
+    },
+  ];
+
   const columns: Column<Tables<"buzo">>[] = [
     {
       header: "Nombre",
       cell: (r) => r.nombre_buzo,
       className: "whitespace-nowrap font-medium min-w-[230px]",
     },
-    { header: "RUT", cell: (r) => r.rut_buzo, className: "whitespace-nowrap min-w-[120px]" },
-    { header: "Correo", cell: (r) => r.email ?? "—", className: "whitespace-nowrap" },
-    {
-      header: "Clase / matrícula",
-      cell: (r) => r.clase_matricula ?? "—",
-      className: "whitespace-nowrap",
-    },
-    {
-      header: "Venc. hiperbárico",
-      cell: (r) => formatDate(r.vencimiento_hipervarico),
-      className: "whitespace-nowrap",
-    },
-    {
-      header: "Ordenador asignado",
-      cell: (r) => r.ordenador_asignado ?? "—",
-      className: "whitespace-nowrap",
-    },
-    {
-      header: "Estado",
-      cell: (r) => <Badge tone={r.estado}>{r.estado}</Badge>,
-      className: "whitespace-nowrap",
-    },
+    ...columnasOpcionales.filter((c) => columnasVisibles.includes(c.id)),
     {
       header: "",
       className: "whitespace-nowrap",
@@ -188,6 +231,37 @@ export function Buzos() {
             + Nuevo buzo
           </button>
         )}
+      </div>
+
+      <div className="mb-3 flex justify-end">
+        <div className="relative">
+          <button className="btn-secondary" onClick={() => setSelectorAbierto((v) => !v)}>
+            Columnas ({columnasVisibles.length})
+          </button>
+          {selectorAbierto && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setSelectorAbierto(false)} />
+              <div className="card absolute right-0 top-11 z-20 w-72 p-4">
+                <p className="eyebrow mb-2">Elige qué columnas mostrar</p>
+                <div className="max-h-72 space-y-1 overflow-y-auto">
+                  {columnasOpcionales.map((c) => (
+                    <label key={c.id} className="flex items-center gap-2 rounded px-1 py-1.5 text-sm text-slate-200 hover:bg-navy-800">
+                      <input
+                        type="checkbox"
+                        checked={columnasVisibles.includes(c.id)}
+                        onChange={() => alternarColumna(c.id)}
+                      />
+                      {c.header}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-2 border-t border-navy-700/70 pt-2 text-xs text-slate-500">
+                  La selección se recuerda la próxima vez que entres a este mantenedor.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {loading ? (

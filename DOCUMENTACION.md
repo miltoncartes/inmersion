@@ -564,3 +564,30 @@ Lo escribe la base, no el cliente, así que no se puede falsear desde el fronten
 En el Resumen, la tarjeta **Vencimientos próx.** fue reemplazada por **Minutos de Buceo Mensual**: la suma de `tiempos_totales.tiempo_total_buceo` de todas las inmersiones del mes en curso, de todos los buzos. Se eliminaron las dos consultas de vencimientos, así que la pantalla hace 5 consultas en vez de 6.
 
 **Consecuencia a tener presente:** desapareció el único aviso proactivo de vencimientos. Los equipos conservan su insignia de estado en el mantenedor de Equipos, pero el mantenedor de Buzos muestra la fecha del hipervárico como texto plano, sin destacar los próximos a vencer. Queda pendiente agregarle esa insignia.
+
+---
+
+## 18. Cambios versión 1.7.3
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 18.1 Selector de columnas en el mantenedor de Buzos
+El mantenedor de Buzos incorpora el mismo botón **Columnas (N)** que ya tenía el de Equipos: un panel con una casilla por columna, y la selección guardada por navegador en `localStorage` (clave `mdibuceo_buzos_columnas`). Se reutilizó el marcado y las clases del selector de Equipos para que ambos se vean y se comporten igual.
+
+**Nombre** queda fija como columna identificadora —el equivalente a Matrícula en Equipos— junto con la columna de acciones (Editar / Eliminar). El resto es parametrizable:
+
+| Columna | Id | Visible por defecto |
+|---|---|---|
+| RUT | `rut` | sí |
+| Correo | `correo` | sí |
+| Clase / matrícula | `clase_matricula` | sí |
+| Venc. matrícula | `venc_matricula` | no |
+| Venc. hiperbárico | `venc_hipervarico` | sí |
+| Ordenador asignado | `ordenador` | sí |
+| Acceso al sistema | `habilitado` | no |
+| Estado | `estado` | sí |
+
+Las visibles por defecto son las mismas que la tabla mostraba antes del cambio, así que nadie ve su pantalla alterada sin haberlo pedido.
+
+### 18.2 Dos columnas nuevas, apagadas por defecto
+`fecha_vencimiento_matricula` y `habilitado` existían en la ficha del buzo pero nunca se habían mostrado en la tabla. Ahora están disponibles como columnas opcionales: **Venc. matrícula** y **Acceso al sistema** (esta última con insignia verde/gris), para no tener que abrir cada ficha.
