@@ -591,3 +591,56 @@ Las visibles por defecto son las mismas que la tabla mostraba antes del cambio, 
 
 ### 18.2 Dos columnas nuevas, apagadas por defecto
 `fecha_vencimiento_matricula` y `habilitado` existían en la ficha del buzo pero nunca se habían mostrado en la tabla. Ahora están disponibles como columnas opcionales: **Venc. matrícula** y **Acceso al sistema** (esta última con insignia verde/gris), para no tener que abrir cada ficha.
+
+---
+
+## 19. Cambios versión 1.7.4 — Integridad de los tiempos de la inmersión
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 19.1 El problema
+Una inmersión del 9 de septiembre quedó guardada con `profundidad_maxima` en null. La causa no fue la base: el formulario solo verificaba que el campo no estuviera vacío, y después `parseDecimal()` convertía en **null silencioso** cualquier texto no numérico (`24,4 mts`, `24 metros`). La aplicación mostraba "guardado" y el dato se perdía. El mismo patrón afectaba a `temperatura_agua` y, vía `Number()` → `NaN` → null, a `tiempo_total_descompresion`.
+
+Además esa inmersión **se validó igual**, sin que nada advirtiera que estaba incompleta.
+
+### 19.2 Validación numérica real en el formulario
+`src/pages/NuevaInmersion.tsx` ahora convierte primero y rechaza si el resultado no es un número, en vez de mirar solo que el campo tenga algo escrito:
+
+| Campo | Regla |
+|---|---|
+| Profundidad máxima | Obligatorio, número > 0 y ≤ 60 |
+| Temperatura del agua | Obligatorio, número válido |
+| Tiempo de descompresión | Obligatorio, número ≥ 0 |
+
+El techo de 60 m es el límite operacional definido por MDI Buceo y vive en la constante `PROFUNDIDAD_MAXIMA_M`. La máxima registrada en la bitácora es 32,9 m; el tope existe para atrapar errores de tipeo como 244 en vez de 24,4.
+
+**Descompresión pasó a ser obligatoria con el 0 explícito.** Antes, dejarla vacía confundía "no requirió descompresión" con "no se registró el dato", y no había forma de separarlos: de 73 registros, 10 estaban en null y **ninguno en cero**.
+
+### 19.3 Restricciones en la base (`0003_datos_obligatorios.sql`)
+La validación del navegador es experiencia de usuario, no seguridad: se puede saltar llamando la API directamente. El control real quedó en la base.
+
+```sql
+check (profundidad_maxima is not null and profundidad_maxima > 0 and profundidad_maxima <= 60)  -- NOT VALID
+check (tiempo_total_descompresion is not null and tiempo_total_descompresion >= 0)              -- NOT VALID
+check (tiempo_total_fondo is not null and tiempo_total_buceo is not null)                       -- validada
+```
+
+Las dos primeras son `NOT VALID` a propósito: rigen para toda inserción y modificación desde ahora, pero no revisan las 11 filas históricas que las violarían, porque la instrucción fue no tocar los registros cargados. Además es instantánea — no recorre ni bloquea la tabla. Fondo y buceo no tienen ningún null, así que esa sí se agregó validada.
+
+Cuando esas 11 filas se corrijan (con cuenta de administrador), confirmar con `validate constraint`.
+
+### 19.4 No se puede validar una inmersión incompleta (`0004_validar_solo_completas.sql`)
+El trigger `protect_validacion_fields` ahora rechaza el paso a `validada` si la inmersión no tiene profundidad máxima y tiempo de descompresión. Va en el trigger y no en el botón, así que aplica aunque se llame la API directamente. Se mantiene `SECURITY INVOKER` y el `search_path` fijo: RLS no cambia para ningún rol.
+
+Dos correcciones respecto de la versión anterior del trigger:
+
+- **El rol se lee una sola vez** en el bloque `declare`, en vez de consultar `usuarios_app` hasta cuatro veces por fila actualizada.
+- **La verificación pregunta en positivo** (`not exists` de una fila *completa*) en lugar de buscar una fila incompleta. La forma negada dejaba pasar el caso de que no existiera fila de `tiempos_totales`, que es el más incompleto de todos.
+
+### 19.5 Mensajes de error
+`src/lib/errores.ts` traduce las tres restricciones nuevas y el bloqueo de validación. Importa por el caché del navegador: quien tenga la versión anterior cargada seguirá enviando datos inválidos un rato, y para esa persona el mensaje de la base es el único disponible.
+
+### 19.6 Lo que no se hizo
+No se modificó ningún registro. La inmersión del 9 de septiembre sigue con su profundidad en null y las 10 sin descompresión siguen como estaban; se corregirán aparte, con rol de administrador y con los valores reales. Convertir esos nulls a 0 automáticamente habría sido asumir que todas fueron inmersiones sin descompresión, y eso no consta.
+
+Tampoco se unificaron en una transacción las dos escrituras (`perfil_inmersion` y `tiempos_totales`). El defecto de diseño existe, pero la evidencia que lo sugería resultó ser otra cosa: la edición sospechosa del día 9 era la validación del supervisor, que solo escribe en `perfil_inmersion`. Queda como pendiente de baja prioridad.

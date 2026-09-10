@@ -10,6 +10,10 @@ import type { Tables } from "../lib/types";
 
 const ESTADOS_MAR = ["Calmo", "Marejadilla", "Marejada", "Fuerte marejada"];
 
+// Techo operacional definido por MDI Buceo. La maxima registrada en la bitacora
+// es 32,9 m; el tope atrapa errores de tipeo como 244 en vez de 24,4.
+const PROFUNDIDAD_MAXIMA_M = 60;
+
 export function NuevaInmersion() {
   const { id } = useParams();
   const editing = Boolean(id);
@@ -159,8 +163,15 @@ export function NuevaInmersion() {
       setError("Debes seleccionar el equipo utilizado.");
       return;
     }
-    if (!form.profundidad_maxima.trim()) {
-      setError("Debes indicar la profundidad máxima.");
+    // Se convierte antes de validar: parseDecimal devuelve null ante texto no
+    // numerico ("24,4 mts"), y sin este chequeo ese null se guardaba en silencio.
+    const profundidad = parseDecimal(form.profundidad_maxima);
+    if (profundidad === null) {
+      setError('La profundidad máxima debe ser un número. Ejemplo: 24,4 — sin la palabra "mts".');
+      return;
+    }
+    if (profundidad <= 0 || profundidad > PROFUNDIDAD_MAXIMA_M) {
+      setError(`La profundidad máxima debe estar entre 0 y ${PROFUNDIDAD_MAXIMA_M} metros.`);
       return;
     }
     if (!form.hora_dejo_superficie) {
@@ -183,12 +194,20 @@ export function NuevaInmersion() {
       setError("Debes seleccionar la tabulación de la Tabla US Navy.");
       return;
     }
-    if (!form.temperatura_agua.trim()) {
-      setError("Debes indicar la temperatura del agua.");
+    const temperatura = parseDecimal(form.temperatura_agua);
+    if (temperatura === null) {
+      setError("Debes indicar la temperatura del agua como número. Ejemplo: 12,5");
       return;
     }
     if (!form.estado_mar) {
       setError("Debes seleccionar el estado del mar.");
+      return;
+    }
+    // Obligatoria y con el 0 explicito: dejarla vacia confundia "no requirio
+    // descompresion" con "no se registro el dato", y no habia forma de separarlos.
+    const descompresion = parseDecimal(form.tiempo_total_descompresion);
+    if (descompresion === null || descompresion < 0) {
+      setError("Debes indicar el tiempo de descompresión en minutos. Si no requirió descompresión, escribe 0.");
       return;
     }
     if (!form.faena_realizada.trim()) {
@@ -212,7 +231,7 @@ export function NuevaInmersion() {
         hora_llego_fondo: form.hora_llego_fondo || null,
         hora_dejo_fondo: form.hora_dejo_fondo || null,
         hora_llego_superficie: form.hora_llego_superficie || null,
-        temperatura_agua: form.temperatura_agua ? parseDecimal(form.temperatura_agua) : null,
+        temperatura_agua: temperatura,
         estado_mar: form.estado_mar || null,
         faena_realizada: form.faena_realizada || null,
         created_by: session?.user.id ?? null,
@@ -232,11 +251,9 @@ export function NuevaInmersion() {
         id_inmersion: inmersionId!,
         id_buzo: form.id_buzo,
         tiempo_total_fondo: tiempoTotalFondo,
-        tiempo_total_descompresion: form.tiempo_total_descompresion
-          ? Number(form.tiempo_total_descompresion)
-          : null,
+        tiempo_total_descompresion: descompresion,
         tiempo_total_buceo: tiempoTotalBuceo,
-        profundidad_maxima: form.profundidad_maxima ? parseDecimal(form.profundidad_maxima) : null,
+        profundidad_maxima: profundidad,
       };
       const { error: tError } = await supabase.from("tiempos_totales").upsert(tiemposPayload);
       if (tError) throw tError;
@@ -378,6 +395,8 @@ export function NuevaInmersion() {
             label="Tiempo de descompresión (mins)"
             type="number"
             min={0}
+            required
+            placeholder="Si no requirió descompresión, escribe 0"
             value={form.tiempo_total_descompresion}
             onChange={(e) => update("tiempo_total_descompresion", e.target.value)}
           />

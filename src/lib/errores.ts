@@ -30,6 +30,12 @@ const PORConstraint: Record<string, string> = {
   supervisor_rut_super_key: "Ya existe un supervisor registrado con ese RUT.",
   idx_buzo_email_unique: "Ya existe un buzo registrado con ese correo electrónico.",
   tiempos_totales_id_buzo_fkey: "El buzo de los tiempos totales no existe en el mantenedor.",
+  tiempos_totales_profundidad_obligatoria:
+    "Debes indicar la profundidad máxima como un número entre 0 y 60 metros. Ejemplo: 24,4",
+  tiempos_totales_descompresion_obligatoria:
+    "Debes indicar el tiempo de descompresión en minutos. Si no requirió descompresión, escribe 0.",
+  tiempos_totales_tiempos_obligatorios:
+    "Faltan los tiempos de fondo o de buceo. Revisa que las cuatro horas de la inmersión estén completas.",
 };
 
 /** Mensajes por columna, para not-null violations. */
@@ -101,6 +107,9 @@ export function mensajeDeError(error: unknown, accion = "guardar"): string {
   }
   if (message.includes("ya fue validada")) {
     return "La inmersión ya fue validada por un administrador y no puede modificarse.";
+  }
+  if (message.includes("No se puede validar")) {
+    return "No se puede validar: a la inmersión le falta la profundidad máxima o el tiempo de descompresión. Pide que se complete antes de validarla.";
   }
   if (message.includes("Failed to fetch") || message.includes("NetworkError")) {
     return "No hay conexión con el servidor. Revisa tu conexión a internet e inténtalo de nuevo.";
