@@ -163,7 +163,7 @@ Ninguna tabla es accesible sin sesión válida — no hay acceso anónimo a dato
 | Tabla | SELECT | INSERT / UPDATE | DELETE |
 |---|---|---|---|
 | `buzo`, `equipos`, `supervisor`, `cliente` | usuario activo | `admin` o `supervisor` | solo `admin` |
-| `perfil_inmersion`, `tiempos_totales` | usuario activo | `admin` o `supervisor` | solo `admin` |
+| `perfil_inmersion`, `tiempos_totales` | `admin` y `supervisor` ven todo; un `buzo` ve **solo sus propias inmersiones** (`is_editor() OR id_buzo = mi_id_buzo()`) | `admin`, `supervisor`, o el propio buzo mientras esté pendiente | solo `admin` |
 | `usuarios_app` | propia fila, o todas si `admin` | `admin` únicamente | solo `admin` |
 
 Implementado con funciones `SECURITY DEFINER` (`is_active_user()`, `is_editor()`, `is_admin()`) para evitar recursión de RLS. Se corrigieron los warnings del linter de seguridad de Supabase (`search_path` fijo en funciones trigger, `handle_new_user` sin acceso público por RPC). Los únicos warnings restantes son intencionales: las funciones helper de rol deben ser ejecutables por `authenticated`/`anon` para que las políticas RLS funcionen; solo devuelven un booleano sobre la sesión propia, no exponen datos.
@@ -695,3 +695,43 @@ El proyecto etiquetaba cada versión hasta la `v1.7.0`, y las versiones 1.7.1 a 
 Esta versión **no toca la base de datos**: es frontend y archivos estáticos. Los datos no se ven afectados y revertir no tiene riesgo. Dos caminos: promover el despliegue anterior desde el panel de Vercel, que es inmediato, o `git revert` del commit y volver a desplegar.
 
 Se mantuvo `logo-mdi.jpg` en el repositorio aunque ya no lo importa nadie, como respaldo del original.
+
+---
+
+## 21. Cambios versión 1.7.6 — La tarjeta de minutos se calcula en la base
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 21.1 La suma dejó de hacerse en el navegador
+La tarjeta **Minutos de Buceo Mensual** del Resumen descargaba todas las inmersiones del mes con su fila de tiempos y las sumaba con un bucle en el cliente. Medido sobre la base real: **67 filas y 2.881 bytes de JSON** para mostrar un número de 4 dígitos.
+
+Ahora la suma la hace Postgres con la función `minutos_buceo_mes(p_desde date)` y la respuesta son **4 bytes**. El Resumen es la primera pantalla después de entrar y la abren todos, todos los días, así que el costo se pagaba en cada sesión y crecía con la operación.
+
+Dos decisiones de diseño:
+
+- **`SECURITY INVOKER`**, no `DEFINER`. Las políticas RLS se siguen aplicando a quien llama. Usar `DEFINER` habría sido más simple y habría abierto un agujero.
+- **La fecha de inicio va como parámetro**, no se calcula con `current_date`. El servidor corre en UTC y la operación está en horario de Chile; en el cambio de mes no coinciden. El navegador ya calcula su inicio de mes para las otras tarjetas, así que se reutiliza y las cuatro quedan consistentes.
+
+### 21.2 Validación previa a publicar
+La función se creó dentro de transacciones con `rollback` para probarla sin dejar nada en la base:
+
+| Prueba | Resultado |
+|---|---|
+| Admin: función vs. cálculo anterior | 1.985 = 1.985 |
+| Buzo: función vs. cálculo anterior | 231 = 231 |
+| RLS respetada | el buzo ve 231 de 1.985 |
+| Rango sin datos | 0, no `null` |
+| Inmersión sin fila de tiempos (simulada) | no altera el total |
+
+También se detectó que Supabase concede `execute` a `anon` por privilegios por defecto del esquema, y que `revoke ... from public` no alcanza esa concesión. Sin sesión la función devuelve 0 igual, porque RLS no deja ver ninguna fila, pero se revocó explícitamente.
+
+### 21.3 La tarjeta le mentía a los buzos
+El subtítulo decía *"Mes en curso · todos los buzos"* para todo el mundo, pero **un buzo ve solo sus propios minutos**: 231 donde un administrador ve 1.985. RLS filtra `perfil_inmersion` con `is_editor() OR id_buzo = mi_id_buzo()`, y eso ya ocurría antes de este cambio. Ahora el subtítulo cambia según el rol: *"todos los buzos"* para admin y supervisor, *"tus inmersiones"* para un buzo.
+
+### 21.4 Corrección de la sección 5
+La tabla de RLS de la sección 5 decía que `perfil_inmersion` y `tiempos_totales` eran legibles por cualquier "usuario activo". Es incorrecto: un buzo solo ve sus propias inmersiones. La fila quedó corregida. Un comentario en `Dashboard.tsx` repetía el mismo error, tomado de esa tabla, y también se corrigió.
+
+### 21.5 Orden de publicación
+Primero la función en Supabase, después el frontend — al revés del despliegue anterior. Si el frontend sale primero, llama a una función que no existe y la tarjeta muestra error; una función que nadie llama es inerte.
+
+**Vuelta atrás:** `drop function public.minutos_buceo_mes(date);` y revertir el commit. No toca datos.

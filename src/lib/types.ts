@@ -690,6 +690,7 @@ export type Database = {
       puede_recuperar_password: { Args: { p_email: string }; Returns: boolean }
       estado_registro_email: { Args: { p_email: string }; Returns: string }
       eliminar_usuario: { Args: { p_id: string }; Returns: undefined }
+      minutos_buceo_mes: { Args: { p_desde: string }; Returns: number }
     }
     Enums: {
       estado_validacion_inmersion: "pendiente" | "validada"

@@ -44,10 +44,9 @@ export function Dashboard() {
         supabase.from("perfil_inmersion").select("id_inmersion", { count: "exact", head: true }).gte("fecha_inmersion", inicioMes),
         supabase.from("perfil_inmersion").select("id_inmersion", { count: "exact", head: true }),
         supabase.from("buzo").select("id_buzo", { count: "exact", head: true }).eq("estado", "activo"),
-        supabase
-          .from("perfil_inmersion")
-          .select("tiempos:tiempos_totales!id_inmersion(tiempo_total_buceo)")
-          .gte("fecha_inmersion", inicioMes),
+        // La suma la hace la base y devuelve un entero. Antes se bajaban todas
+        // las inmersiones del mes con sus tiempos para sumarlas aca.
+        supabase.rpc("minutos_buceo_mes", { p_desde: inicioMes }),
         esEditor
           ? supabase
               .from("perfil_inmersion")
@@ -67,15 +66,12 @@ export function Dashboard() {
       setTotalMes(mes.count ?? 0);
       setTotalHistorico(historico.count ?? 0);
       setBuzosActivos(buzos.count ?? 0);
-      // Minutos buceados en el mes: es la suma de todos los buzos, no la del
-      // usuario en sesion, porque el SELECT de tiempos_totales alcanza a todas
-      // las inmersiones para cualquier usuario activo.
-      setMinutosMes(
-        ((buceoMes.data as any[]) ?? []).reduce((acc, fila) => {
-          const t = Array.isArray(fila.tiempos) ? fila.tiempos[0] : fila.tiempos;
-          return acc + (t?.tiempo_total_buceo ?? 0);
-        }, 0)
-      );
+      // Ojo con lo que suma esta cifra: RLS filtra perfil_inmersion con
+      // "is_editor() OR es su propio buzo", asi que un admin o supervisor ve el
+      // total de la empresa y un buzo ve solo lo suyo. Por eso el subtitulo de
+      // la tarjeta cambia segun el rol: decir "todos los buzos" a un buzo seria
+      // mentirle sobre lo que esta viendo.
+      setMinutosMes((buceoMes.data as number | null) ?? 0);
       setRecientes((recent.data as any) ?? []);
       setLoading(false);
     })();
@@ -118,7 +114,7 @@ export function Dashboard() {
             <StatTile
               label="Minutos de Buceo Mensual"
               value={minutosMes.toLocaleString("es-CL")}
-              hint="Mes en curso · todos los buzos"
+              hint={esEditor ? "Mes en curso · todos los buzos" : "Mes en curso · tus inmersiones"}
             />
           </div>
 
