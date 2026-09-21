@@ -1,4 +1,4 @@
-import logoMdi from "../assets/logo-mdi.jpg";
+import logoMdi from "../assets/logo-mdi.svg";
 
 export function Logo({ size = 44, className = "" }: { size?: number; className?: string }) {
   return (

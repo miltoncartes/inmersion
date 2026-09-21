@@ -644,3 +644,54 @@ Dos correcciones respecto de la versión anterior del trigger:
 No se modificó ningún registro. La inmersión del 9 de septiembre sigue con su profundidad en null y las 10 sin descompresión siguen como estaban; se corregirán aparte, con rol de administrador y con los valores reales. Convertir esos nulls a 0 automáticamente habría sido asumir que todas fueron inmersiones sin descompresión, y eso no consta.
 
 Tampoco se unificaron en una transacción las dos escrituras (`perfil_inmersion` y `tiempos_totales`). El defecto de diseño existe, pero la evidencia que lo sugería resultó ser otra cosa: la edición sospechosa del día 9 era la validación del supervisor, que solo escribe en `perfil_inmersion`. Queda como pendiente de baja prioridad.
+
+---
+
+## 20. Cambios versión 1.7.5 — Identidad visual: logo vectorial e íconos
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 20.1 El logo pasó a vectorial
+El logo vivía como `src/assets/logo-mdi.jpg` (714 × 636, 115 KB): no escalaba, no tenía transparencia y la compresión JPEG dejaba bordes sucios alrededor de las líneas blancas. Se vectorizó con **potrace** a partir del JPG original y quedó en `src/assets/logo-mdi.svg`: **24 KB, 42 contornos**, escalable sin pérdida.
+
+Del mismo proceso salió el dato que faltaba: **el azul corporativo es `#275E94`**, medido sobre el original.
+
+El lienzo del SVG de la barra lateral se dejó **recto**, sin esquinas redondeadas propias, porque el componente `Logo.tsx` ya redondea con `rounded-2xl`; con ambas se veía un doble redondeo.
+
+### 20.2 Isotipo simplificado para tamaños chicos
+El logo completo **no sirve como favicon**: a 32 px las mangueras y el regulador se empastan, y a 16 px queda una mancha. Se comprobó rasterizando el SVG a esos tamaños.
+
+La solución fue un isotipo: separando el dibujo por componentes conectados se aislaron las dos mangueras y las tres piezas del regulador, y se conservó solo el cuerpo (capucha + máscara) con el trazo engrosado. Queda en `src/assets/isotipo-mdi.svg`, **5 KB**, y se lee bien a 32 px.
+
+Se evaluaron dos alternativas descartadas: conservar el regulador sin mangueras (a 32 px el regulador se ve como suciedad) y una silueta sólida (la más legible a 16 px, pero pierde el trazo de línea que caracteriza al logo). La silueta queda como opción si alguna vez el favicon no se distingue.
+
+### 20.3 Íconos y manifiesto
+Carpeta `public/` nueva, que Vite copia a la raíz del sitio:
+
+| Archivo | Uso |
+|---|---|
+| `favicon.svg` | Pestaña en navegadores modernos |
+| `favicon.ico` (16/32/48) | Compatibilidad; además elimina el 404 de `/favicon.ico` |
+| `favicon-16.png`, `favicon-32.png` | Respaldo |
+| `apple-touch-icon.png` (180) | Pantalla de inicio en iPhone; **sin transparencia**, porque iOS pinta de negro las zonas transparentes |
+| `icon-192.png`, `icon-512.png` | Android e instalación |
+| `site.webmanifest` | Permite instalar la app: se abre sin barra del navegador, con `#0f1b24` de fondo |
+
+Los PNG se generaron **desde la máscara de origen, no rasterizando el SVG**, para controlar el suavizado a 16 y 32 px.
+
+Esto importa en terreno: la app es responsive y se usa desde el celular, y con el manifiesto un buzo puede dejarla en su pantalla de inicio como si fuera una app nativa.
+
+### 20.4 Etiquetas de versión al día
+El proyecto etiquetaba cada versión hasta la `v1.7.0`, y las versiones 1.7.1 a 1.7.4 se publicaron sin etiqueta. Se crearon retroactivamente sobre sus commits, de modo que cada versión vuelve a tener su punto de retorno:
+
+| Etiqueta | Commit | Contenido |
+|---|---|---|
+| `v1.7.1` | `20df5d8` | Cálculo del Tiempo de Fondo |
+| `v1.7.2` | `5f51ee2` | Validación por supervisores + tarjeta de minutos |
+| `v1.7.3` | `f452185` | Selector de columnas en Buzos |
+| `v1.7.4` | `a29ed1b` | Integridad de los tiempos |
+
+### 20.5 Alcance y vuelta atrás
+Esta versión **no toca la base de datos**: es frontend y archivos estáticos. Los datos no se ven afectados y revertir no tiene riesgo. Dos caminos: promover el despliegue anterior desde el panel de Vercel, que es inmediato, o `git revert` del commit y volver a desplegar.
+
+Se mantuvo `logo-mdi.jpg` en el repositorio aunque ya no lo importa nadie, como respaldo del original.
