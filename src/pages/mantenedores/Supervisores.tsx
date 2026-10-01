@@ -14,6 +14,7 @@ const empty: SupervisorForm = {
   rut_super: "",
   nombre_super: "",
   email: "",
+  clase_matricula: "",
   fecha_vencimiento_matricula: "",
   // Todo supervisor nuevo nace deshabilitado: un admin debe habilitarlo para
   // que pueda crear su cuenta e ingresar al sistema.
@@ -46,6 +47,7 @@ export function Supervisores() {
       rut_super: row.rut_super,
       nombre_super: row.nombre_super,
       email: row.email ?? "",
+      clase_matricula: row.clase_matricula ?? "",
       fecha_vencimiento_matricula: row.fecha_vencimiento_matricula ?? "",
       habilitado: row.habilitado,
     });
@@ -72,6 +74,7 @@ export function Supervisores() {
     const payload = {
       ...parsed.data,
       email: parsed.data.email?.trim() ? parsed.data.email.trim().toLowerCase() : null,
+      clase_matricula: parsed.data.clase_matricula || null,
       fecha_vencimiento_matricula: parsed.data.fecha_vencimiento_matricula || null,
     };
     const err =
@@ -105,6 +108,11 @@ export function Supervisores() {
     },
     { header: "RUT", cell: (r) => r.rut_super, className: "whitespace-nowrap min-w-[120px]" },
     { header: "Correo", cell: (r) => r.email ?? "—", className: "whitespace-nowrap" },
+    {
+      header: "Clase / matrícula",
+      cell: (r) => r.clase_matricula ?? "—",
+      className: "whitespace-nowrap",
+    },
     {
       header: "Venc. matrícula",
       cell: (r) => formatDate(r.fecha_vencimiento_matricula),
@@ -191,6 +199,12 @@ export function Supervisores() {
             <p className="-mt-2 text-xs text-slate-500">
               Es el correo con el que el supervisor creará su cuenta. Solo podrá registrarse cuando lo habilites.
             </p>
+            <TextField
+              label="Clase / matrícula"
+              value={form.clase_matricula ?? ""}
+              onChange={(e) => setForm({ ...form, clase_matricula: e.target.value })}
+              placeholder="Ej: Buzo Supervisor Clase II"
+            />
             <TextField
               label="Vencimiento de matrícula"
               type="date"

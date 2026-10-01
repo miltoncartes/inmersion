@@ -72,12 +72,14 @@ export type Database = {
           created_at: string
           email: string | null
           estado: string
+          fecha_proximo_examen_salud: string | null
           fecha_vencimiento_matricula: string | null
           habilitado: boolean
           id_buzo: string
           id_equipo_asignado: string | null
           nombre_buzo: string
           ordenador_asignado: string | null
+          organismo_administrador_salud: string | null
           rut_buzo: string
           updated_at: string
           vencimiento_hipervarico: string | null
@@ -87,12 +89,14 @@ export type Database = {
           created_at?: string
           email?: string | null
           estado?: string
+          fecha_proximo_examen_salud?: string | null
           fecha_vencimiento_matricula?: string | null
           habilitado?: boolean
           id_buzo?: string
           id_equipo_asignado?: string | null
           nombre_buzo: string
           ordenador_asignado?: string | null
+          organismo_administrador_salud?: string | null
           rut_buzo: string
           updated_at?: string
           vencimiento_hipervarico?: string | null
@@ -102,12 +106,14 @@ export type Database = {
           created_at?: string
           email?: string | null
           estado?: string
+          fecha_proximo_examen_salud?: string | null
           fecha_vencimiento_matricula?: string | null
           habilitado?: boolean
           id_buzo?: string
           id_equipo_asignado?: string | null
           nombre_buzo?: string
           ordenador_asignado?: string | null
+          organismo_administrador_salud?: string | null
           rut_buzo?: string
           updated_at?: string
           vencimiento_hipervarico?: string | null
@@ -282,6 +288,7 @@ export type Database = {
           created_at: string
           fecha_calibracion_consola_aire: string | null
           fecha_mantencion_cargador_alta_presion: string | null
+          fecha_mantencion_compresor: string | null
           fecha_mantencion_consola_comunicaciones: string | null
           id_botella_aux: string | null
           id_botella_emer: string | null
@@ -289,6 +296,7 @@ export type Database = {
           id_masc: string | null
           matricula_equipo: string | null
           numero_serie_cargador_alta_presion: string | null
+          numero_serie_compresor: string | null
           numero_serie_consola_aire: string | null
           numero_serie_consola_comunicaciones: string | null
           updated_at: string
@@ -298,6 +306,7 @@ export type Database = {
           created_at?: string
           fecha_calibracion_consola_aire?: string | null
           fecha_mantencion_cargador_alta_presion?: string | null
+          fecha_mantencion_compresor?: string | null
           fecha_mantencion_consola_comunicaciones?: string | null
           id_botella_aux?: string | null
           id_botella_emer?: string | null
@@ -305,6 +314,7 @@ export type Database = {
           id_masc?: string | null
           matricula_equipo?: string | null
           numero_serie_cargador_alta_presion?: string | null
+          numero_serie_compresor?: string | null
           numero_serie_consola_aire?: string | null
           numero_serie_consola_comunicaciones?: string | null
           updated_at?: string
@@ -314,6 +324,7 @@ export type Database = {
           created_at?: string
           fecha_calibracion_consola_aire?: string | null
           fecha_mantencion_cargador_alta_presion?: string | null
+          fecha_mantencion_compresor?: string | null
           fecha_mantencion_consola_comunicaciones?: string | null
           id_botella_aux?: string | null
           id_botella_emer?: string | null
@@ -321,6 +332,7 @@ export type Database = {
           id_masc?: string | null
           matricula_equipo?: string | null
           numero_serie_cargador_alta_presion?: string | null
+          numero_serie_compresor?: string | null
           numero_serie_consola_aire?: string | null
           numero_serie_consola_comunicaciones?: string | null
           updated_at?: string
@@ -399,8 +411,10 @@ export type Database = {
           id_navy: string | null
           id_supervisor: string | null
           id_tipo_faena: string | null
+          mezcla_gases: string | null
           observacion_admin: string | null
           temperatura_agua: number | null
+          tipo_buceo: string | null
           ubicacion: string | null
           updated_at: string
           validado_at: string | null
@@ -427,8 +441,10 @@ export type Database = {
           id_navy?: string | null
           id_supervisor?: string | null
           id_tipo_faena?: string | null
+          mezcla_gases?: string | null
           observacion_admin?: string | null
           temperatura_agua?: number | null
+          tipo_buceo?: string | null
           ubicacion?: string | null
           updated_at?: string
           validado_at?: string | null
@@ -455,8 +471,10 @@ export type Database = {
           id_navy?: string | null
           id_supervisor?: string | null
           id_tipo_faena?: string | null
+          mezcla_gases?: string | null
           observacion_admin?: string | null
           temperatura_agua?: number | null
+          tipo_buceo?: string | null
           ubicacion?: string | null
           updated_at?: string
           validado_at?: string | null
@@ -537,6 +555,7 @@ export type Database = {
       }
       supervisor: {
         Row: {
+          clase_matricula: string | null
           created_at: string
           email: string | null
           fecha_vencimiento_matricula: string | null
@@ -547,6 +566,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          clase_matricula?: string | null
           created_at?: string
           email?: string | null
           fecha_vencimiento_matricula?: string | null
@@ -557,6 +577,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          clase_matricula?: string | null
           created_at?: string
           email?: string | null
           fecha_vencimiento_matricula?: string | null

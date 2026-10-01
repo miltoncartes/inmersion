@@ -762,3 +762,34 @@ El plan gratuito pausa un proyecto tras un período de inactividad; `mdibuceo` e
 
 ### 22.5 Orden de publicación y vuelta atrás
 Primero las dos migraciones en Supabase, después el frontend — si el frontend sale primero, consulta una tabla y una vista que todavía no existen. **Vuelta atrás**: `drop view public.v_inmersiones_listado;` y `alter table public.perfil_inmersion drop column id_tipo_faena; drop table public.tipos_faena;`, más revertir el commit del frontend. No se tocó ningún dato de las 113 inmersiones existentes.
+
+---
+
+## 23. Cambios versión 1.7.8 — Grupo A del Artículo 37 (Ministerio del Trabajo)
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### Contexto
+El cliente compartió un nuevo artículo del Ministerio del Trabajo con 14 exigencias de registro para empresas de buceo profesional. Se cruzó cada punto contra el esquema real de la base (no contra lo que la documentación decía que existía) y se clasificó en cuatro grupos por costo y riesgo. Esta versión cubre el **Grupo A**: columnas nuevas sobre tablas que ya existían, sin crear módulos nuevos. Las cuatro migraciones son **puramente aditivas** — columnas nullable, ninguna toca las 113 inmersiones, 15 buzos, 2 supervisores o el equipo ya cargados. Se validó cada una en una transacción con `rollback` contra la base real antes de escribir el código.
+
+### 23.1 N° de serie y mantenimiento del compresor (punto 8)
+`equipos.numero_serie_compresor` + `fecha_mantencion_compresor` (migración `0008`). Se agregó como dos columnas más en `equipos`, no como catálogo nuevo, porque es exactamente el patrón ya establecido en esa misma tabla para consola de aire, consola de comunicaciones y cargador de alta presión: pares número de serie + fecha de mantención directamente sobre el equipo.
+
+### 23.2 Matrícula del supervisor (punto 4)
+`supervisor.clase_matricula` (migración `0009`), igual al campo que ya tenía el buzo. El supervisor tenía la fecha de vencimiento de su matrícula pero no decía de qué clase se trataba.
+
+### 23.3 Tipo de buceo y mezcla de gases (punto 2)
+`perfil_inmersion.tipo_buceo` + `mezcla_gases` (migración `0010`). La app no modelaba esto en ninguna parte — la Tabla US Navy (`id_navy`) es la pareja profundidad/tiempo de la tabla de descompresión, no la mezcla de gases. Se implementó como texto con opciones sugeridas en el cliente, mismo patrón que `estado_mar` (lista fija en el frontend, sin catálogo en la base), porque la operación de MDI Buceo es mayoritariamente aire comprimido.
+
+**Lista de partida, pendiente de confirmar con la operación real:**
+- Tipo de buceo: Buceo autónomo / Buceo con suministro de superficie / Buceo en saturación.
+- Mezcla de gases: Aire comprimido / Nitrox / Heliox / Trimix / Otro.
+
+### 23.4 Vigilancia de salud — Ley 16.744 (punto 13)
+`buzo.organismo_administrador_salud` + `fecha_proximo_examen_salud` (migración `0011`). Se modeló igual que `vencimiento_hipervarico`, que ya existía en la misma tabla: una fecha de próximo examen, para reutilizar el mismo semáforo de vencimiento (activo / por vencer / vencido) que ya tenía el mantenedor de Buzos, en vez de inventar un estado nuevo.
+
+### 23.5 Del Artículo 37, lo que queda pendiente
+De los 14 puntos, el Grupo A cubre 4 (puntos 2, 4 parcial, 8, 13). Quedan: Grupo B (mantenedor de embarcaciones, punto 3), Grupo C (período de descanso entre inmersiones, punto 5) y Grupo D — incidentes/accidentes y subcontratación, matriz de riesgos, programa de prevención, plan de emergencia, capacitaciones (puntos 9 a 12 y 14) — que son módulos nuevos de verdad y cambian el alcance de la aplicación, no extensiones de lo existente.
+
+### 23.6 Orden de publicación y vuelta atrás
+Primero las cuatro migraciones en Supabase, después el frontend. **Vuelta atrás**: `alter table ... drop column ...` para cada una de las ocho columnas nuevas, más revertir el commit del frontend y redesplegar. No se tocó ningún dato existente.

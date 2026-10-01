@@ -9,6 +9,11 @@ import { minutesBetween, todayISO, parseDecimal } from "../lib/format";
 import type { Tables } from "../lib/types";
 
 const ESTADOS_MAR = ["Calmo", "Marejadilla", "Marejada", "Fuerte marejada"];
+// Articulo 37 (Ministerio del Trabajo): tipo de buceo y mezcla de gases
+// empleada. Lista de partida -- revisar con la operacion real de MDI Buceo
+// y ajustar si falta alguna categoria que usen.
+const TIPOS_BUCEO = ["Buceo autónomo", "Buceo con suministro de superficie", "Buceo en saturación"];
+const MEZCLAS_GAS = ["Aire comprimido", "Nitrox", "Heliox", "Trimix", "Otro"];
 
 // Techo operacional definido por MDI Buceo. La maxima registrada en la bitacora
 // es 32,9 m; el tope atrapa errores de tipeo como 244 en vez de 24,4.
@@ -48,6 +53,8 @@ export function NuevaInmersion() {
     estado_mar: "",
     faena_realizada: "",
     id_tipo_faena: "",
+    tipo_buceo: "",
+    mezcla_gases: "",
     profundidad_maxima: "",
     tiempo_total_descompresion: "",
     id_navy: "",
@@ -92,6 +99,8 @@ export function NuevaInmersion() {
             estado_mar: perfil.estado_mar ?? "",
             faena_realizada: perfil.faena_realizada ?? "",
             id_tipo_faena: perfil.id_tipo_faena ?? "",
+            tipo_buceo: perfil.tipo_buceo ?? "",
+            mezcla_gases: perfil.mezcla_gases ?? "",
             profundidad_maxima: tiempos?.profundidad_maxima?.toString() ?? "",
             tiempo_total_descompresion: tiempos?.tiempo_total_descompresion?.toString() ?? "",
             id_navy: perfil.id_navy ?? "",
@@ -239,6 +248,8 @@ export function NuevaInmersion() {
         estado_mar: form.estado_mar || null,
         faena_realizada: form.faena_realizada || null,
         id_tipo_faena: form.id_tipo_faena || null,
+        tipo_buceo: form.tipo_buceo || null,
+        mezcla_gases: form.mezcla_gases || null,
         created_by: session?.user.id ?? null,
       };
 
@@ -358,6 +369,18 @@ export function NuevaInmersion() {
             placeholder="Ej: 24,4 o 24.4"
             value={form.profundidad_maxima}
             onChange={(e) => update("profundidad_maxima", e.target.value)}
+          />
+          <SelectField
+            label="Tipo de buceo"
+            value={form.tipo_buceo}
+            onChange={(e) => update("tipo_buceo", e.target.value)}
+            options={TIPOS_BUCEO.map((v) => ({ value: v, label: v }))}
+          />
+          <SelectField
+            label="Mezcla de gases"
+            value={form.mezcla_gases}
+            onChange={(e) => update("mezcla_gases", e.target.value)}
+            options={MEZCLAS_GAS.map((v) => ({ value: v, label: v }))}
           />
           <TextField
             label="Dejó superficie (hora)"

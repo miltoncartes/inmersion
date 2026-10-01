@@ -39,6 +39,8 @@ const empty: BuzoForm = {
   clase_matricula: "",
   fecha_vencimiento_matricula: "",
   vencimiento_hipervarico: "",
+  organismo_administrador_salud: "",
+  fecha_proximo_examen_salud: "",
   estado: "activo",
   // Todo buzo nuevo nace deshabilitado: un admin o supervisor debe habilitarlo
   // para que pueda crear su cuenta e ingresar al sistema.
@@ -84,6 +86,8 @@ export function Buzos() {
       clase_matricula: row.clase_matricula ?? "",
       fecha_vencimiento_matricula: row.fecha_vencimiento_matricula ?? "",
       vencimiento_hipervarico: row.vencimiento_hipervarico ?? "",
+      organismo_administrador_salud: row.organismo_administrador_salud ?? "",
+      fecha_proximo_examen_salud: row.fecha_proximo_examen_salud ?? "",
       estado: row.estado as BuzoForm["estado"],
       habilitado: row.habilitado,
       ordenador_asignado: row.ordenador_asignado ?? "",
@@ -114,6 +118,8 @@ export function Buzos() {
       clase_matricula: parsed.data.clase_matricula || null,
       fecha_vencimiento_matricula: parsed.data.fecha_vencimiento_matricula || null,
       vencimiento_hipervarico: parsed.data.vencimiento_hipervarico || null,
+      organismo_administrador_salud: parsed.data.organismo_administrador_salud?.trim() || null,
+      fecha_proximo_examen_salud: parsed.data.fecha_proximo_examen_salud || null,
       ordenador_asignado: parsed.data.ordenador_asignado?.trim() || null,
     };
     const err =
@@ -201,6 +207,27 @@ export function Buzos() {
       header: "Estado hiperbárico",
       cell: (r) => {
         const estado = estadoVencimiento(r.vencimiento_hipervarico);
+        return estado ? <Badge tone={estado}>{estado.replace("_", " ")}</Badge> : <span className="text-slate-500">—</span>;
+      },
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "organismo_salud",
+      header: "Organismo administrador (Ley 16.744)",
+      cell: (r) => r.organismo_administrador_salud ?? "—",
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "proximo_examen_salud",
+      header: "Próximo examen de salud",
+      cell: (r) => formatDate(r.fecha_proximo_examen_salud),
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "estado_examen_salud",
+      header: "Estado vigilancia de salud",
+      cell: (r) => {
+        const estado = estadoVencimiento(r.fecha_proximo_examen_salud);
         return estado ? <Badge tone={estado}>{estado.replace("_", " ")}</Badge> : <span className="text-slate-500">—</span>;
       },
       className: "whitespace-nowrap",
@@ -348,6 +375,18 @@ export function Buzos() {
               type="date"
               value={form.vencimiento_hipervarico ?? ""}
               onChange={(e) => setForm({ ...form, vencimiento_hipervarico: e.target.value })}
+            />
+            <TextField
+              label="Organismo administrador (Ley 16.744)"
+              value={form.organismo_administrador_salud ?? ""}
+              onChange={(e) => setForm({ ...form, organismo_administrador_salud: e.target.value })}
+              placeholder="Ej: ACHS, Mutual de Seguridad, IST"
+            />
+            <TextField
+              label="Próximo examen de salud"
+              type="date"
+              value={form.fecha_proximo_examen_salud ?? ""}
+              onChange={(e) => setForm({ ...form, fecha_proximo_examen_salud: e.target.value })}
             />
             <SelectField
               label="Estado"

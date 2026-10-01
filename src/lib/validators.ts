@@ -19,6 +19,8 @@ export const buzoSchema = z.object({
   clase_matricula: z.string().optional().nullable(),
   fecha_vencimiento_matricula: z.string().optional().nullable(),
   vencimiento_hipervarico: z.string().optional().nullable(),
+  organismo_administrador_salud: z.string().optional().nullable(),
+  fecha_proximo_examen_salud: z.string().optional().nullable(),
   estado: z.enum(["activo", "inactivo", "suspendido"]),
   habilitado: z.boolean(),
   ordenador_asignado: z.string().optional().nullable(),
@@ -49,6 +51,8 @@ export const equipoSchema = z.object({
   fecha_mantencion_consola_comunicaciones: z.string().optional().nullable(),
   numero_serie_cargador_alta_presion: z.string().optional().nullable(),
   fecha_mantencion_cargador_alta_presion: z.string().optional().nullable(),
+  numero_serie_compresor: z.string().optional().nullable(),
+  fecha_mantencion_compresor: z.string().optional().nullable(),
 });
 export type EquipoForm = z.infer<typeof equipoSchema>;
 
@@ -83,6 +87,7 @@ export const supervisorSchema = z.object({
     .or(z.literal(""))
     .optional()
     .nullable(),
+  clase_matricula: z.string().optional().nullable(),
   fecha_vencimiento_matricula: z.string().optional().nullable(),
   habilitado: z.boolean(),
 });

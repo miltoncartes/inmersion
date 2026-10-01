@@ -24,6 +24,8 @@ const empty: EquipoForm = {
   fecha_mantencion_consola_comunicaciones: "",
   numero_serie_cargador_alta_presion: "",
   fecha_mantencion_cargador_alta_presion: "",
+  numero_serie_compresor: "",
+  fecha_mantencion_compresor: "",
 };
 
 function estadoVencimiento(fecha: string | null): "activo" | "por_vencer" | "vencido" | null {
@@ -113,6 +115,8 @@ export function Equipos() {
       fecha_mantencion_consola_comunicaciones: row.fecha_mantencion_consola_comunicaciones ?? "",
       numero_serie_cargador_alta_presion: row.numero_serie_cargador_alta_presion ?? "",
       fecha_mantencion_cargador_alta_presion: row.fecha_mantencion_cargador_alta_presion ?? "",
+      numero_serie_compresor: row.numero_serie_compresor ?? "",
+      fecha_mantencion_compresor: row.fecha_mantencion_compresor ?? "",
     });
     setErrors({});
     setModal(row);
@@ -174,6 +178,8 @@ export function Equipos() {
       fecha_mantencion_consola_comunicaciones: d.fecha_mantencion_consola_comunicaciones || null,
       numero_serie_cargador_alta_presion: d.numero_serie_cargador_alta_presion || null,
       fecha_mantencion_cargador_alta_presion: d.fecha_mantencion_cargador_alta_presion || null,
+      numero_serie_compresor: d.numero_serie_compresor || null,
+      fecha_mantencion_compresor: d.fecha_mantencion_compresor || null,
     };
 
     let idEquipo: string;
@@ -292,6 +298,16 @@ export function Equipos() {
       id: "fecha_mantencion_cargador_alta_presion",
       header: "Fecha mantención cargador alta presión",
       cell: (r) => formatDate(r.fecha_mantencion_cargador_alta_presion),
+    },
+    {
+      id: "serie_compresor",
+      header: "N° serie compresor",
+      cell: (r) => r.numero_serie_compresor ?? "—",
+    },
+    {
+      id: "fecha_mantencion_compresor",
+      header: "Fecha mantención compresor",
+      cell: (r) => formatDate(r.fecha_mantencion_compresor),
     },
   ];
 
@@ -441,6 +457,17 @@ export function Equipos() {
               type="date"
               value={form.fecha_mantencion_cargador_alta_presion ?? ""}
               onChange={(e) => setForm({ ...form, fecha_mantencion_cargador_alta_presion: e.target.value })}
+            />
+            <TextField
+              label="N° serie compresor"
+              value={form.numero_serie_compresor ?? ""}
+              onChange={(e) => setForm({ ...form, numero_serie_compresor: e.target.value })}
+            />
+            <TextField
+              label="Fecha mantención compresor"
+              type="date"
+              value={form.fecha_mantencion_compresor ?? ""}
+              onChange={(e) => setForm({ ...form, fecha_mantencion_compresor: e.target.value })}
             />
             {errors._global && <p className="field-error">{errors._global}</p>}
             <button className="btn-primary w-full" onClick={handleSubmit} disabled={saving}>
