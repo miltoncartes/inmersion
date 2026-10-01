@@ -735,3 +735,30 @@ La tabla de RLS de la sección 5 decía que `perfil_inmersion` y `tiempos_totale
 Primero la función en Supabase, después el frontend — al revés del despliegue anterior. Si el frontend sale primero, llama a una función que no existe y la tarjeta muestra error; una función que nadie llama es inerte.
 
 **Vuelta atrás:** `drop function public.minutos_buceo_mes(date);` y revertir el commit. No toca datos.
+
+---
+
+## 22. Cambios versión 1.7.7 — Catálogo de faenas, búsqueda real y aviso de vencimientos en Buzos
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### 22.1 Catálogo de tipos de faena
+Nueva tabla `tipos_faena` (nombre + observación), con mantenedor propio en `/mantenedores/tipos-faena`. `perfil_inmersion.faena_realizada` sigue siendo texto libre para el detalle ("limpieza de redes sector norte, 4 jaulas"); el campo nuevo `id_tipo_faena` es la categoría que permite agrupar. Es **opcional**: el catálogo nace vacío, así que obligarlo habría bloqueado el formulario hasta que alguien lo cargue. FK con `ON DELETE RESTRICT`, igual que el resto de los catálogos — no se puede borrar un tipo ya usado en una inmersión.
+
+Migración `0006_tipos_faena.sql`, puramente aditiva: columna nueva nullable, no exige nada a las 113 inmersiones existentes.
+
+### 22.2 Búsqueda del listado de Inmersiones, resuelta en el servidor
+Antes la pantalla bajaba hasta 500 inmersiones con sus tres tablas unidas y filtraba en el navegador — con la bitácora ya en 113 registros, esto empezaba a acercarse al límite donde la búsqueda habría dicho "no encontrado" sobre inmersiones que sí existen.
+
+Se creó la vista `v_inmersiones_listado` (migración `0007_vista_busqueda_inmersiones.sql`) con **`security_invoker = on`**: sin eso, una vista corre con los permisos de quien la creó y se salta RLS por completo. Con esa opción, Postgres vuelve a evaluar `is_editor() OR id_buzo = mi_id_buzo()` sobre `perfil_inmersion` con el rol de quien consulta — la misma regla que protege la tabla base. Se validó antes de publicar: un admin ve 113 filas a través de la vista (el total real), un buzo ve 1 (solo la suya).
+
+`src/pages/Inmersiones.tsx` quedó reescrito: la búsqueda corre en el servidor con `ilike` sobre `nombre_buzo`/`nombre_cliente`, con debounce de 350 ms (no dispara una consulta por tecla), **sin techo de registros**. Se agregó un filtro de rango de fechas (3 meses / 12 meses / todo el historial, 3 meses por defecto) para la navegación normal; la búsqueda ignora ese rango a propósito, porque quien busca un nombre no tiene por qué saber en qué ventana de tiempo cayó esa inmersión. También se distingue ahora "la bitácora está vacía" de "no hay resultados para este filtro".
+
+### 22.3 Insignia de vencimiento en el mantenedor de Buzos
+Dos columnas opcionales nuevas, "Estado matrícula" y "Estado hiperbárico", con el mismo semáforo (activo / por vencer / vencido, margen de 30 días) que ya tenía el mantenedor de Equipos. No hay cambio de base: usa las columnas de fecha que ya existían.
+
+### 22.4 Incidente operativo: el proyecto Supabase se pausó
+El plan gratuito pausa un proyecto tras un período de inactividad; `mdibuceo` estuvo pausado varios días y la producción no podía conectarse a la base. Al reactivarlo, la organización tenía el límite de 2 proyectos activos en el plan gratuito ya ocupado (`Huevos` y `ambientalia`), así que se pausó `Huevos` para liberar el cupo — decisión del cliente, confirmada antes de ejecutarla. `Huevos` queda pausado hasta que se reactive manualmente o se suba el plan de la organización.
+
+### 22.5 Orden de publicación y vuelta atrás
+Primero las dos migraciones en Supabase, después el frontend — si el frontend sale primero, consulta una tabla y una vista que todavía no existen. **Vuelta atrás**: `drop view public.v_inmersiones_listado;` y `alter table public.perfil_inmersion drop column id_tipo_faena; drop table public.tipos_faena;`, más revertir el commit del frontend. No se tocó ningún dato de las 113 inmersiones existentes.

@@ -26,6 +26,8 @@ const PORConstraint: Record<string, string> = {
   perfil_inmersion_id_supervisor_fkey: "El supervisor seleccionado ya no existe en el mantenedor.",
   perfil_inmersion_id_navy_fkey:
     "La tabulación seleccionada ya no existe en el mantenedor de Tabla US Navy.",
+  perfil_inmersion_id_tipo_faena_fkey:
+    "El tipo de faena seleccionado ya no existe en el mantenedor.",
   buzo_rut_buzo_key: "Ya existe un buzo registrado con ese RUT.",
   supervisor_rut_super_key: "Ya existe un supervisor registrado con ese RUT.",
   idx_buzo_email_unique: "Ya existe un buzo registrado con ese correo electrónico.",

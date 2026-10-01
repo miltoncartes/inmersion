@@ -398,6 +398,7 @@ export type Database = {
           id_inmersion: string
           id_navy: string | null
           id_supervisor: string | null
+          id_tipo_faena: string | null
           observacion_admin: string | null
           temperatura_agua: number | null
           ubicacion: string | null
@@ -425,6 +426,7 @@ export type Database = {
           id_inmersion?: string
           id_navy?: string | null
           id_supervisor?: string | null
+          id_tipo_faena?: string | null
           observacion_admin?: string | null
           temperatura_agua?: number | null
           ubicacion?: string | null
@@ -452,6 +454,7 @@ export type Database = {
           id_inmersion?: string
           id_navy?: string | null
           id_supervisor?: string | null
+          id_tipo_faena?: string | null
           observacion_admin?: string | null
           temperatura_agua?: number | null
           ubicacion?: string | null
@@ -494,6 +497,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cliente"
             referencedColumns: ["id_cliente"]
+          },
+          {
+            foreignKeyName: "perfil_inmersion_id_tipo_faena_fkey"
+            columns: ["id_tipo_faena"]
+            isOneToOne: false
+            referencedRelation: "tipos_faena"
+            referencedColumns: ["id_tipo_faena"]
           },
           {
             foreignKeyName: "perfil_inmersion_id_equipo_fkey"
@@ -577,6 +587,30 @@ export type Database = {
           composicion?: string
           created_at?: string
           id_navy?: string
+          observacion?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tipos_faena: {
+        Row: {
+          created_at: string
+          id_tipo_faena: string
+          nombre: string
+          observacion: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id_tipo_faena?: string
+          nombre: string
+          observacion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id_tipo_faena?: string
+          nombre?: string
           observacion?: string | null
           updated_at?: string
         }
@@ -680,7 +714,20 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_inmersiones_listado: {
+        Row: {
+          id_inmersion: string
+          fecha_inmersion: string
+          estado_validacion: Database["public"]["Enums"]["estado_validacion_inmersion"]
+          id_buzo: string | null
+          nombre_buzo: string | null
+          id_cliente: string | null
+          nombre_cliente: string | null
+          profundidad_maxima: number | null
+          tiempo_total_buceo: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_active_user: { Args: never; Returns: boolean }

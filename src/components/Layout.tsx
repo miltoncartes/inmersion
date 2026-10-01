@@ -19,6 +19,7 @@ const mantenedores = [
   { to: "/mantenedores/supervisores", label: "Supervisores" },
   { to: "/mantenedores/clientes", label: "Clientes" },
   { to: "/mantenedores/tabla-us-navy", label: "Tabla US Navy" },
+  { to: "/mantenedores/tipos-faena", label: "Tipos de faena" },
 ];
 
 export function Layout() {

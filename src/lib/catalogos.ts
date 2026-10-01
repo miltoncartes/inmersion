@@ -24,6 +24,7 @@ export type Catalogos = {
   clientes: Tables<"cliente">[];
   equipos: Tables<"equipos">[];
   tablaNavy: Tables<"tabla_us_navy">[];
+  tiposFaena: Tables<"tipos_faena">[];
 };
 
 let cache: { datos: Catalogos; expiraEn: number } | null = null;
@@ -32,12 +33,13 @@ let cache: { datos: Catalogos; expiraEn: number } | null = null;
 let enVuelo: Promise<Catalogos> | null = null;
 
 async function traerCatalogos(): Promise<Catalogos> {
-  const [b, s, c, e, n] = await Promise.all([
+  const [b, s, c, e, n, f] = await Promise.all([
     supabase.from("buzo").select("*").eq("estado", "activo").order("nombre_buzo"),
     supabase.from("supervisor").select("*").order("nombre_super"),
     supabase.from("cliente").select("*").order("nombre_cliente"),
     supabase.from("equipos").select("*").order("matricula_equipo"),
     supabase.from("tabla_us_navy").select("*").order("composicion"),
+    supabase.from("tipos_faena").select("*").order("nombre"),
   ]);
 
   return {
@@ -46,6 +48,7 @@ async function traerCatalogos(): Promise<Catalogos> {
     clientes: c.data ?? [],
     equipos: e.data ?? [],
     tablaNavy: n.data ?? [],
+    tiposFaena: f.data ?? [],
   };
 }
 

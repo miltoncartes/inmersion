@@ -12,6 +12,20 @@ import { Badge } from "../../components/Badge";
 import type { Tables } from "../../lib/types";
 
 const ESTADOS = ["activo", "inactivo", "suspendido"];
+
+// Mismo criterio que el mantenedor de Equipos (30 dias de margen): un buzo con
+// hiperbarico o matricula por vencer hoy no tiene ninguna alerta en pantalla,
+// solo la fecha como texto plano. Se recupera el aviso que la app perdio al
+// sacar la tarjeta "Vencimientos prox." del Resumen.
+function estadoVencimiento(fecha: string | null): "activo" | "por_vencer" | "vencido" | null {
+  if (!fecha) return null;
+  const hoy = new Date();
+  const venc = new Date(fecha);
+  const dias = (venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24);
+  if (dias < 0) return "vencido";
+  if (dias <= 30) return "por_vencer";
+  return "activo";
+}
 // Mismo patron que el mantenedor de Equipos: la seleccion de columnas se
 // guarda por navegador, asi cada usuario arma la tabla que le sirve.
 const CLAVE_COLUMNAS = "mdibuceo_buzos_columnas";
@@ -171,6 +185,24 @@ export function Buzos() {
       id: "venc_hipervarico",
       header: "Venc. hiperbárico",
       cell: (r) => formatDate(r.vencimiento_hipervarico),
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "estado_matricula",
+      header: "Estado matrícula",
+      cell: (r) => {
+        const estado = estadoVencimiento(r.fecha_vencimiento_matricula);
+        return estado ? <Badge tone={estado}>{estado.replace("_", " ")}</Badge> : <span className="text-slate-500">—</span>;
+      },
+      className: "whitespace-nowrap",
+    },
+    {
+      id: "estado_hipervarico",
+      header: "Estado hiperbárico",
+      cell: (r) => {
+        const estado = estadoVencimiento(r.vencimiento_hipervarico);
+        return estado ? <Badge tone={estado}>{estado.replace("_", " ")}</Badge> : <span className="text-slate-500">—</span>;
+      },
       className: "whitespace-nowrap",
     },
     {

@@ -25,6 +25,12 @@ export const buzoSchema = z.object({
 });
 export type BuzoForm = z.infer<typeof buzoSchema>;
 
+export const tipoFaenaSchema = z.object({
+  nombre: z.string().min(1, "Nombre requerido"),
+  observacion: z.string().optional().nullable(),
+});
+export type TipoFaenaForm = z.infer<typeof tipoFaenaSchema>;
+
 export const tablaUsNavySchema = z.object({
   composicion: z.string().min(1, "Composición requerida"),
   observacion: z.string().optional().nullable(),

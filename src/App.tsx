@@ -23,6 +23,7 @@ const Mascaras = lazy(() => import("./pages/mantenedores/Mascaras").then((m) => 
 const BotellasAux = lazy(() => import("./pages/mantenedores/BotellasAux").then((m) => ({ default: m.BotellasAux })));
 const BotellasEmer = lazy(() => import("./pages/mantenedores/BotellasEmer").then((m) => ({ default: m.BotellasEmer })));
 const TablaUsNavy = lazy(() => import("./pages/mantenedores/TablaUsNavy").then((m) => ({ default: m.TablaUsNavy })));
+const TiposFaena = lazy(() => import("./pages/mantenedores/TiposFaena").then((m) => ({ default: m.TiposFaena })));
 
 function Cargando() {
   return <p className="text-sm text-slate-400">Cargando…</p>;
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/mantenedores/botellas-aux" element={<EditorOnly><BotellasAux /></EditorOnly>} />
           <Route path="/mantenedores/botellas-emer" element={<EditorOnly><BotellasEmer /></EditorOnly>} />
           <Route path="/mantenedores/tabla-us-navy" element={<EditorOnly><TablaUsNavy /></EditorOnly>} />
+          <Route path="/mantenedores/tipos-faena" element={<EditorOnly><TiposFaena /></EditorOnly>} />
           <Route path="/usuarios" element={<AdminOnly><Usuarios /></AdminOnly>} />
         </Route>
       </Routes>

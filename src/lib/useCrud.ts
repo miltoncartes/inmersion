@@ -8,7 +8,7 @@ type TableName = keyof Database["public"]["Tables"];
 // Tablas que alimentan el caché de catálogos del formulario de inmersión: al
 // modificarlas hay que descartar ese caché para que el cambio se vea de
 // inmediato en "Nueva inmersión".
-const TABLAS_DE_CATALOGO: string[] = ["buzo", "supervisor", "cliente", "equipos", "tabla_us_navy"];
+const TABLAS_DE_CATALOGO: string[] = ["buzo", "supervisor", "cliente", "equipos", "tabla_us_navy", "tipos_faena"];
 
 export function useCrud<T extends TableName>(table: T, orderBy: string) {
   type Row = Database["public"]["Tables"][T]["Row"];

@@ -25,6 +25,7 @@ export function NuevaInmersion() {
   const [clientes, setClientes] = useState<Tables<"cliente">[]>([]);
   const [equipos, setEquipos] = useState<Tables<"equipos">[]>([]);
   const [tablaNavy, setTablaNavy] = useState<Tables<"tabla_us_navy">[]>([]);
+  const [tiposFaena, setTiposFaena] = useState<Tables<"tipos_faena">[]>([]);
   const [centros, setCentros] = useState<Tables<"centro_cultivo">[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +47,7 @@ export function NuevaInmersion() {
     temperatura_agua: "",
     estado_mar: "",
     faena_realizada: "",
+    id_tipo_faena: "",
     profundidad_maxima: "",
     tiempo_total_descompresion: "",
     id_navy: "",
@@ -59,6 +61,7 @@ export function NuevaInmersion() {
       setClientes(catalogos.clientes);
       setEquipos(catalogos.equipos);
       setTablaNavy(catalogos.tablaNavy);
+      setTiposFaena(catalogos.tiposFaena);
 
       if (id) {
         const { data: perfil } = await supabase
@@ -88,6 +91,7 @@ export function NuevaInmersion() {
             temperatura_agua: perfil.temperatura_agua?.toString() ?? "",
             estado_mar: perfil.estado_mar ?? "",
             faena_realizada: perfil.faena_realizada ?? "",
+            id_tipo_faena: perfil.id_tipo_faena ?? "",
             profundidad_maxima: tiempos?.profundidad_maxima?.toString() ?? "",
             tiempo_total_descompresion: tiempos?.tiempo_total_descompresion?.toString() ?? "",
             id_navy: perfil.id_navy ?? "",
@@ -234,6 +238,7 @@ export function NuevaInmersion() {
         temperatura_agua: temperatura,
         estado_mar: form.estado_mar || null,
         faena_realizada: form.faena_realizada || null,
+        id_tipo_faena: form.id_tipo_faena || null,
         created_by: session?.user.id ?? null,
       };
 
@@ -445,13 +450,21 @@ export function NuevaInmersion() {
         </Section>
 
         <Section title="Faena realizada">
+          <SelectField
+            label="Tipo de faena"
+            value={form.id_tipo_faena}
+            onChange={(e) => update("id_tipo_faena", e.target.value)}
+            placeholder={tiposFaena.length === 0 ? "Sin tipos cargados" : "Selecciona..."}
+            options={tiposFaena.map((t) => ({ value: t.id_tipo_faena, label: t.nombre }))}
+          />
           <div className="sm:col-span-2">
             <TextareaField
-              label="Faena realizada"
+              label="Detalle de la faena"
               rows={3}
               required
               value={form.faena_realizada}
               onChange={(e) => update("faena_realizada", e.target.value)}
+              placeholder="Ej: limpieza de redes sector norte, 4 jaulas"
             />
           </div>
         </Section>
