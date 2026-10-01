@@ -793,3 +793,24 @@ De los 14 puntos, el Grupo A cubre 4 (puntos 2, 4 parcial, 8, 13). Quedan: Grupo
 
 ### 23.6 Orden de publicación y vuelta atrás
 Primero las cuatro migraciones en Supabase, después el frontend. **Vuelta atrás**: `alter table ... drop column ...` para cada una de las ocho columnas nuevas, más revertir el commit del frontend y redesplegar. No se tocó ningún dato existente.
+
+---
+
+## 24. Cambios versión 1.7.9 — Mezcla de gases, corregida contra el reglamento real
+
+Donde esta sección contradiga a las anteriores, manda esta.
+
+### Lo que cambió
+La lista `MEZCLAS_GAS` de Nueva inmersión (agregada en la v1.7.8 como lista provisional) se contrastó contra el **TM-035 — Reglamento de Buceo para Buzos Profesionales** (Armada de Chile / DIRECTEMAR), que es el reglamento real detrás del Artículo 37. El TM-035 clasifica el medio respiratorio en **Aire, Oxígeno y Mezcla de Gases** (Heliox, Nitrox), tratando el oxígeno puro como categoría propia, no como parte de una mezcla. La lista no lo tenía.
+
+```diff
+- const MEZCLAS_GAS = ["Aire comprimido", "Nitrox", "Heliox", "Trimix", "Otro"];
++ const MEZCLAS_GAS = ["Aire comprimido", "Oxígeno", "Nitrox", "Heliox", "Trimix", "Otro"];
+```
+
+Cambio de frontend puro: el campo es texto libre en la base (`perfil_inmersion.mezcla_gases`, migración `0010`), no un enum, así que no hubo migración nueva ni riesgo para las inmersiones ya registradas.
+
+**La lista de "tipo de buceo"** (autónomo / suministro de superficie / saturación) se contrastó también contra el TM-035 y se mantuvo sin cambios: corresponde a una simplificación razonable de las categorías reales del reglamento (semi-autónomo liviano / semi-autónomo pesado-SDS / saturación).
+
+### Fuente
+Armada de Chile, TM-035 "Reglamento de Buceo para Buzos Profesionales": https://www.directemar.cl/directemar/site/docs/20170126/20170126124850/tm_035__ultima_actualizacion_agosto_2024.pdf

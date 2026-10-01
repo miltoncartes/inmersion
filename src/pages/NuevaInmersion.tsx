@@ -13,7 +13,11 @@ const ESTADOS_MAR = ["Calmo", "Marejadilla", "Marejada", "Fuerte marejada"];
 // empleada. Lista de partida -- revisar con la operacion real de MDI Buceo
 // y ajustar si falta alguna categoria que usen.
 const TIPOS_BUCEO = ["Buceo autónomo", "Buceo con suministro de superficie", "Buceo en saturación"];
-const MEZCLAS_GAS = ["Aire comprimido", "Nitrox", "Heliox", "Trimix", "Otro"];
+// Oxigeno va como categoria propia, no dentro de "mezcla": el TM-035
+// (Reglamento de Buceo para Buzos Profesionales, Armada de Chile) clasifica
+// el medio respiratorio en Aire, Oxigeno y Mezcla de Gases (Heliox/Nitrox),
+// tratando el oxigeno puro aparte de las mezclas.
+const MEZCLAS_GAS = ["Aire comprimido", "Oxígeno", "Nitrox", "Heliox", "Trimix", "Otro"];
 
 // Techo operacional definido por MDI Buceo. La maxima registrada en la bitacora
 // es 32,9 m; el tope atrapa errores de tipeo como 244 en vez de 24,4.
